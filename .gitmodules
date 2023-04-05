@@ -1,0 +1,6 @@
+[submodule "encodec"]
+	path = encodec
+	url = https://github.com/facebookresearch/encodec
+[submodule "audiolm-pytorch"]
+	path = audiolm-pytorch
+	url = https://github.com/lucidrains/audiolm-pytorch
