@@ -3,7 +3,6 @@ import pandas as pd
 import torch
 import torchaudio
 from torch.utils.data import Dataset
-from torchaudio.transforms import MelSpectrogram
 
 
 class CommonVoiceDataset(Dataset):
@@ -19,13 +18,6 @@ class CommonVoiceDataset(Dataset):
         self.data_root = data_root
         self.metadata = pd.read_csv(os.path.join(data_root, tsv_file), delimiter="\t")
         self.transform = transform
-        self.mel_spectrogram = MelSpectrogram(
-            sample_rate=44100,
-            n_fft=400,
-            hop_length=None,
-            win_length=None,
-            n_mels=128
-        )
 
     def __len__(self):
         return len(self.metadata)
@@ -41,14 +33,11 @@ class CommonVoiceDataset(Dataset):
         # Get the corresponding text label
         text = self.metadata.iloc[idx]["sentence"]
 
-        # Compute the mel spectrogram
-        mel_spec = self.mel_spectrogram(waveform)
-
         # Apply the optional transform
         if self.transform:
-            mel_spec = self.transform(mel_spec)
+            waveform = self.transform(waveform)
 
-        return mel_spec, text
+        return waveform, text
 
 
 if __name__ == "__main__":
@@ -58,6 +47,6 @@ if __name__ == "__main__":
     train_dataset = CommonVoiceDataset(data_root, train_tsv)
 
     # Access a sample from the dataset
-    mel_spec, text = train_dataset[0]
-    print("Mel spectrogram shape:", mel_spec.shape)
+    waveform, text = train_dataset[0]
+    print("Waveform shape:", waveform.shape)
     print("Text:", text)

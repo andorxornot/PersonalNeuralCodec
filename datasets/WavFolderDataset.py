@@ -1,8 +1,6 @@
 import os
 import torchaudio
 from torch.utils.data import Dataset
-from torchaudio.transforms import MelSpectrogram
-
 
 class WavFolderDataset(Dataset):
     def __init__(self, data_root, transform=None):
@@ -16,13 +14,6 @@ class WavFolderDataset(Dataset):
         self.data_root = data_root
         self.file_list = [f for f in os.listdir(data_root) if f.endswith('.wav')]
         self.transform = transform
-        self.mel_spectrogram = MelSpectrogram(
-            sample_rate=44100,
-            n_fft=400,
-            hop_length=None,
-            win_length=None,
-            n_mels=128
-        )
 
     def __len__(self):
         return len(self.file_list)
@@ -35,14 +26,11 @@ class WavFolderDataset(Dataset):
         audio_file = os.path.join(self.data_root, self.file_list[idx])
         waveform, sample_rate = torchaudio.load(audio_file)
 
-        # Compute the mel spectrogram
-        mel_spec = self.mel_spectrogram(waveform)
-
         # Apply the optional transform
         if self.transform:
-            mel_spec = self.transform(mel_spec)
+            waveform = self.transform(waveform)
 
-        return mel_spec
+        return waveform
 
 
 if __name__ == "__main__":
@@ -51,5 +39,5 @@ if __name__ == "__main__":
     wav_dataset = WavFolderDataset(data_root)
 
     # Access a sample from the dataset
-    mel_spec = wav_dataset[0]
-    print("Mel spectrogram shape:", mel_spec.shape)
+    waveform = wav_dataset[0]
+    print("Waveform shape:", waveform.shape)
