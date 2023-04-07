@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./external/audiolm-pytorch/audiolm_pytorch",
+        "./external/encodec/encodec"
+    ]
+}
