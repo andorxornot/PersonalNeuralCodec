@@ -1,10 +1,10 @@
 import os
 import torch
-import torchaudio
+import librosa
 from torch.utils.data import Dataset
 
 class WavFolderDataset(Dataset):
-    def __init__(self, data_root, transform=None):
+    def __init__(self, data_root, sample_rate=22050, transform=None):
         """
         Initialize the WavFolderDataset.
 
@@ -13,6 +13,7 @@ class WavFolderDataset(Dataset):
             transform (callable, optional): Optional transform to apply to the audio data.
         """
         self.data_root = data_root
+        self.sample_rate = sample_rate
         self.file_list = [f for f in os.listdir(data_root) if f.endswith('.wav')]
         self.transform = transform
 
@@ -25,7 +26,8 @@ class WavFolderDataset(Dataset):
 
         # Get the path to the audio file and load it
         audio_file = os.path.join(self.data_root, self.file_list[idx])
-        waveform, sample_rate = torchaudio.load(audio_file, normalize=True)
+        waveform, sample_rate = librosa.load(audio_file, sr=self.sample_rate)
+        waveform = torch.from_numpy(waveform).unsqueeze(0)
 
         # Apply the optional transform
         if self.transform:

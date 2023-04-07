@@ -1,12 +1,11 @@
 import os
 import pandas as pd
 import torch
-import torchaudio
+import librosa
 from torch.utils.data import Dataset
 
-
 class CommonVoiceDataset(Dataset):
-    def __init__(self, data_root, tsv_file, transform=None):
+    def __init__(self, data_root, tsv_file, sample_rate=22050, transform=None):
         """
         Initialize the Common Voice dataset.
 
@@ -17,6 +16,7 @@ class CommonVoiceDataset(Dataset):
             transform (callable, optional): Optional transform to apply to the audio data.
         """
         self.data_root = data_root
+        self.sample_rate = sample_rate
         self.metadata = pd.read_csv(os.path.join(data_root, tsv_file), delimiter="\t")
         self.transform = transform
 
@@ -29,14 +29,15 @@ class CommonVoiceDataset(Dataset):
 
         # Get the path to the audio file and load it
         audio_file = os.path.join(self.data_root, "clips", self.metadata.iloc[idx]["path"])
-        waveform, sample_rate = torchaudio.load(audio_file)
-
-        # Get the corresponding text label
-        text = self.metadata.iloc[idx]["sentence"]
-
+        waveform, sample_rate = librosa.load(audio_file, sr=self.sample_rate)
+        waveform = torch.from_numpy(waveform).unsqueeze(0)
+        
         # Apply the optional transform
         if self.transform:
             waveform = self.transform(waveform)
+
+        # Get the corresponding text label
+        text = self.metadata.iloc[idx]["sentence"]
 
         return waveform, text
 

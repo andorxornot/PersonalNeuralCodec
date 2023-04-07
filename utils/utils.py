@@ -1,9 +1,11 @@
 import os
+import sys
 import time
 import torch
-import torchaudio
+import librosa
 import random
-from torchaudio.transforms import MelSpectrogram, InverseMelScale, GriffinLim
+import numpy as np
+import soundfile as sf
 
 def unique_timestamp_str():
     """
@@ -14,42 +16,66 @@ def unique_timestamp_str():
     """
     return time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
 
-
-def wav_to_mel_spectrogram(waveform, sample_rate, n_mels=128):
+def wav_to_mel_spectrogram(waveform, sample_rate, n_mels=80, n_fft=1024, hop_length=256, win_length=None, window_fn="hann"):
     """
     Convert a waveform to a mel spectrogram.
 
     Args:
-        waveform (Tensor): Input waveform (channels, time).
+        waveform (ndarray): Input waveform (time).
         sample_rate (int): Sample rate of the input waveform.
-        n_mels (int, optional): Number of mel filters. Default: 128.
+        n_mels (int, optional): Number of mel filters. Default: 80.
+        n_fft (int, optional): Length of the FFT window. Default: 1024.
+        hop_length (int, optional): Number of audio samples between adjacent STFT columns. Default: 256.
+        win_length (int, optional): Window size. Default: n_fft.
+        window_fn (callable, optional): A function to create a window tensor.
 
     Returns:
-        Tensor: Mel spectrogram (channels, n_mels, time).
+        ndarray: Mel spectrogram (n_mels, time).
     """
-    mel_spectrogram_transform = MelSpectrogram(sample_rate, n_mels=n_mels)
-    mel_spec = mel_spectrogram_transform(waveform)
+  
+    if win_length is None:
+        win_length = n_fft
+
+    mel_spectrogram = librosa.feature.melspectrogram(y=waveform, sr=sample_rate, n_fft=n_fft, hop_length=hop_length, win_length=win_length, window=window_fn, n_mels=n_mels, power=1)
+    return mel_spectrogram
+
+def mel_normalize(mel_spec, min_level_db=-100):
+    # Convert MelSpectrogram to dB scale
+    mel_db = librosa.power_to_db(mel_spec, ref=1.0)
+
+    # Normalize MelSpectrogram in dB scale with minimum threshold
+    mel_norm_db = np.maximum(0, (mel_db - min_level_db) / -min_level_db)
+    return mel_norm_db
+
+def mel_denormalize(mel_db, min_level_db=-100):
+    # Denormalize MelSpectrogram in dB scale with minimum threshold
+    mel_denorm_db = np.maximum(0, mel_db * -min_level_db) + min_level_db
+
+    # Convert dB scale back to power spectrogram
+    mel_spec = librosa.db_to_power(mel_denorm_db, ref=1.0)
     return mel_spec
 
-
-def mel_spectrogram_to_wav(mel_spec, sample_rate, n_iter=32, n_mels=128):
+def mel_spectrogram_to_wav(mel_spec, sample_rate, n_mels=80, n_fft=1024, hop_length=256, win_length=None, window_fn="hann"):
     """
-    Convert a mel spectrogram to a waveform using the Griffin-Lim algorithm.
+    Convert a Mel spectrogram back to a waveform.
 
     Args:
-        mel_spec (Tensor): Input mel spectrogram (channels, n_mels, time).
+        mel_spec (ndarray): Mel spectrogram (n_mels, time).
         sample_rate (int): Sample rate of the output waveform.
-        n_iter (int, optional): Number of iterations for the Griffin-Lim algorithm. Default: 32.
-        n_mels (int, optional): Number of mel filters. Default: 128.
+        n_mels (int, optional): Number of mel filters. Default: 80.
+        n_fft (int, optional): Length of the FFT window. Default: 1024.
+        hop_length (int, optional): Number of audio samples between adjacent STFT columns. Default: 256.
+        win_length (int, optional): Window size. Default: n_fft.
 
     Returns:
-        Tensor: Reconstructed waveform (channels, time).
+        ndarray: Reconstructed waveform (time).
     """
-    inverse_mel_scale_transform = InverseMelScale(n_mels=n_mels, sample_rate=sample_rate)
-    griffin_lim_transform = GriffinLim(n_iter=n_iter)
+    if win_length is None:
+        win_length = n_fft
 
-    spec = inverse_mel_scale_transform(mel_spec)
-    waveform = griffin_lim_transform(spec)
+    # Inverse Mel scale
+    waveform = librosa.feature.inverse.mel_to_audio(mel_spec, sr=sample_rate, n_fft=n_fft, hop_length=hop_length, win_length=win_length, window=window_fn, power=1)
+
     return waveform
 
 class RandomCrop:
@@ -63,3 +89,13 @@ class RandomCrop:
 if __name__ == "__main__":
     # Example usage of the helper functions
     print(unique_timestamp_str())
+
+    # Test mel spectrogram
+    waveform, sample_rate = librosa.load("./data/gettysburg.wav")
+    mels = wav_to_mel_spectrogram(waveform, sample_rate=sample_rate)
+    mel_db = mel_normalize(mels)
+
+    mels = mel_denormalize(mel_db)
+    waveform = mel_spectrogram_to_wav(mels, sample_rate)
+    
+    sf.write("./tmp.wav", waveform, sample_rate, 'PCM_24')

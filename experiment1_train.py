@@ -24,7 +24,7 @@ from losses.multi_scale_mel_spectrogram_loss import MultiScaleMelSpectrogramLoss
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Experiment 1 Training")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
-    parser.add_argument("--epochs", type=int, default=10000, help="Number of epochs")
+    parser.add_argument("--epochs", type=int, default=1000, help="Number of epochs")
     parser.add_argument("--lr", type=float, default=0.0001, help="Learning rate")
     parser.add_argument("--output_dir", type=str, default="./logs/experiment1", help="Output directory")
 
@@ -35,11 +35,15 @@ def train(args):
     os.makedirs(args.output_dir, exist_ok=True)
 
     # Create a TensorBoard writer
-    writer = SummaryWriter(log_dir=args.output_dir)
+    writer = SummaryWriter(log_dir=os.path.join(args.output_dir, unique_timestamp_str()))
+
+     # Audio settings
+    sample_rate = 22050
+    n_mels = 80
 
     # Load dataset
-    transform = RandomCrop(4*4096-512)
-    train_dataset = WavFolderDataset("./data", transform=transform)
+    transform = RandomCrop(2*4096-256)
+    train_dataset = WavFolderDataset("./data", sample_rate=sample_rate, transform=transform)
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 
     # Initialize model, loss, and optimizer
@@ -50,12 +54,15 @@ def train(args):
 
     # Training loop
     for epoch in range(args.epochs):
-        for batch_idx, (data, text) in enumerate(train_dataloader):
-            mels = wav_to_mel_spectrogram(data, sample_rate=22050, n_mels=80).to(device)
-               
+        for batch_idx, (waveform, text) in enumerate(train_dataloader):
+            # Get normalized mel spectogram
+            mels = wav_to_mel_spectrogram(waveform.numpy(), sample_rate=sample_rate, n_mels = n_mels)
+            mel_db = mel_normalize(mels)
+            data = torch.from_numpy(mel_db).to(device)
+
             optimizer.zero_grad()
-            output, _, _ = model(mels)
-            loss = criterion(output, mels)
+            output, _, _ = model(data)
+            loss = criterion(output, data)
             loss.backward()
             optimizer.step()
 
@@ -65,7 +72,7 @@ def train(args):
         writer.add_scalar('Loss/train', loss.item(), epoch)
 
         # Save the model checkpoint
-        if (epoch + 1) % 1000 == 0:
+        if (epoch + 1) % 100 == 0:
             checkpoint_file = os.path.join(args.output_dir, f"checkpoint_epoch_{epoch+1}.pth")
             torch.save(model.state_dict(), checkpoint_file)
             print(f"Model checkpoint saved at {checkpoint_file}")
