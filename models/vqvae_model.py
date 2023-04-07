@@ -39,17 +39,25 @@ class VQVAE(nn.Module):
         self.encoder = nn.Sequential(
             nn.Conv2d(in_channels, hidden_channels, 4, stride=2, padding=1),
             nn.ReLU(),
-            nn.Conv2d(hidden_channels, hidden_channels, 4, stride=2, padding=1),
+            nn.Conv2d(hidden_channels, hidden_channels * 2, 4, stride=2, padding=1),
             nn.ReLU(),
-            nn.Conv2d(hidden_channels, embedding_dim, 3, padding=1)
+            nn.Conv2d(hidden_channels * 2, hidden_channels * 4, 4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(hidden_channels * 4, hidden_channels * 8, 4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(hidden_channels * 8, embedding_dim, 3, padding=1)
         )
 
         self.vq = VectorQuantizer(num_embeddings, embedding_dim)
 
         self.decoder = nn.Sequential(
-            nn.Conv2d(embedding_dim, hidden_channels, 3, padding=1),
+            nn.Conv2d(embedding_dim, hidden_channels * 8, 3, padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(hidden_channels, hidden_channels, 4, stride=2, padding=1),
+            nn.ConvTranspose2d(hidden_channels * 8, hidden_channels * 4, 4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(hidden_channels * 4, hidden_channels * 2, 4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(hidden_channels * 2, hidden_channels, 4, stride=2, padding=1),
             nn.ReLU(),
             nn.ConvTranspose2d(hidden_channels, out_channels, 4, stride=2, padding=1)
         )
