@@ -28,14 +28,18 @@ def evaluate(args):
     # Create output directory
     os.makedirs(args.output_dir, exist_ok=True)
 
+     # Audio settings
+    sample_rate = 22050
+    n_mels = 80
+
     # Load dataset
-    transform = RandomCrop(4096+512)
-    test_dataset = WavFolderDataset("./data", transform=transform)
+    transform = RandomCrop(2*4096-256)
+    test_dataset = WavFolderDataset("./data", sample_rate=sample_rate, transform=transform)
     test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True)
 
     # Initialize model, loss, and load the trained model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = VQVAE(in_channels=1, out_channels=1, hidden_channels=64, num_embeddings=10, embedding_dim=512).to(device)
+    model = VQVAE(in_channels=1, out_channels=1, hidden_channels=128, num_embeddings=1024, embedding_dim=8).to(device)
     criterion = MelSpectrogramLoss().to(device)
     model.load_state_dict(torch.load(args.model_path, map_location=device))
     model.eval()
@@ -43,11 +47,14 @@ def evaluate(args):
     total_loss = 0
     total_samples = 0
     with torch.no_grad():
-        for data, text in test_dataloader:
-            mels = wav_to_mel_spectrogram(data, sample_rate=22050, n_mels=80).to(device)
+        for waveform, text in test_dataloader:
+            # Get normalized mel spectogram
+            mels = wav_to_mel_spectrogram(waveform.numpy(), sample_rate=sample_rate, n_mels = n_mels)
+            mel_db = mel_normalize(mels)
+            data = torch.from_numpy(mel_db).to(device)
 
-            output, _, _ = model(mels)
-            loss = criterion(output, mels)
+            output, _, _ = model(data)
+            loss = criterion(output, data)
             total_loss += loss.item() * len(data)
             total_samples += len(data)
 
