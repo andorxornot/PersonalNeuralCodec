@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class MultiScaleMelSpectrogramLoss(nn.Module):
     def __init__(self, scales=[1, 2, 4, 8]):

@@ -3,18 +3,18 @@ import sys
 import argparse
 
 # Add paths to import from external submodules and internal modules
-sys.path.append(os.path.join(os.path.dirname(__file__), 'external', 'submodule_project1'))
-sys.path.append(os.path.join(os.path.dirname(__file__), 'external', 'submodule_project2'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'external', 'audiolm-pytorch'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'external', 'encodec'))
 
 # Import necessary libraries and modules
 import torch
 from torch.utils.data import DataLoader
-import submodule_project1 as sp1
-import submodule_project2 as sp2
-from utils import some_util_function
-from datasets import MyDataset
-from models import MyModel
-from losses import MyLoss
+import audiolm_pytorch
+import encodec
+from utils.utils import *
+from datasets.wav_folder_dataset import WavFolderDataset
+from models.vqvae_model import VQVAE
+from losses.mel_spectrogram_loss import MelSpectrogramLoss
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Experiment 1 Evaluation")
@@ -29,23 +29,25 @@ def evaluate(args):
     os.makedirs(args.output_dir, exist_ok=True)
 
     # Load dataset
-    test_dataset = MyDataset(...)
-    test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+    transform = RandomCrop(4096+512)
+    test_dataset = WavFolderDataset("./data", transform=transform)
+    test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True)
 
     # Initialize model, loss, and load the trained model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = MyModel(...).to(device)
-    criterion = MyLoss(...).to(device)
+    model = VQVAE(in_channels=1, out_channels=1, hidden_channels=64, num_embeddings=10, embedding_dim=512).to(device)
+    criterion = MelSpectrogramLoss().to(device)
     model.load_state_dict(torch.load(args.model_path, map_location=device))
     model.eval()
 
     total_loss = 0
     total_samples = 0
     with torch.no_grad():
-        for data, target in test_dataloader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            loss = criterion(output, target)
+        for data, text in test_dataloader:
+            mels = wav_to_mel_spectrogram(data, sample_rate=22050, n_mels=80).to(device)
+
+            output, _, _ = model(mels)
+            loss = criterion(output, mels)
             total_loss += loss.item() * len(data)
             total_samples += len(data)
 

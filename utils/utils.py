@@ -2,6 +2,7 @@ import os
 import time
 import torch
 import torchaudio
+import random
 from torchaudio.transforms import MelSpectrogram, InverseMelScale, GriffinLim
 
 def unique_timestamp_str():
@@ -51,6 +52,13 @@ def mel_spectrogram_to_wav(mel_spec, sample_rate, n_iter=32, n_mels=128):
     waveform = griffin_lim_transform(spec)
     return waveform
 
+class RandomCrop:
+    def __init__(self, crop_size):
+        self.crop_size = crop_size
+
+    def __call__(self, waveform):
+        start_idx = random.randint(0, waveform.shape[-1] - self.crop_size)
+        return waveform[..., start_idx:start_idx + self.crop_size]
 
 if __name__ == "__main__":
     # Example usage of the helper functions

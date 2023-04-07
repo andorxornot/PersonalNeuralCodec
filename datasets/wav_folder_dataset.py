@@ -1,4 +1,5 @@
 import os
+import torch
 import torchaudio
 from torch.utils.data import Dataset
 
@@ -24,13 +25,13 @@ class WavFolderDataset(Dataset):
 
         # Get the path to the audio file and load it
         audio_file = os.path.join(self.data_root, self.file_list[idx])
-        waveform, sample_rate = torchaudio.load(audio_file)
+        waveform, sample_rate = torchaudio.load(audio_file, normalize=True)
 
         # Apply the optional transform
         if self.transform:
             waveform = self.transform(waveform)
 
-        return waveform
+        return waveform, ""
 
 
 if __name__ == "__main__":

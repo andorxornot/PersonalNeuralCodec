@@ -13,6 +13,7 @@ class CommonVoiceDataset(Dataset):
         Args:
             data_root (str): Path to the root directory containing the clips folder and TSV files.
             tsv_file (str): Filename of the TSV file containing metadata (e.g., "train.tsv", "test.tsv", "dev.tsv").
+            sample_rate (int, optional): Sample rate to use for the audio data.
             transform (callable, optional): Optional transform to apply to the audio data.
         """
         self.data_root = data_root
