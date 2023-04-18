@@ -7,14 +7,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'external', 'audiolm-pyt
 sys.path.append(os.path.join(os.path.dirname(__file__), 'external', 'encodec'))
 
 # Import necessary libraries and modules
-import torch
 from torch.utils.data import DataLoader
-import audiolm_pytorch
-import encodec
-from utils.utils import *
-from datasets.wav_folder_dataset import WavFolderDataset
-from models.vqvae_model import VQVAE
-from losses.mel_spectrogram_loss import MelSpectrogramLoss
+from pnc.datasets.wav_folder_dataset import WavFolderDataset
+from pnc.models.vqvae_model import VQVAE
+from pnc.losses import MelSpectrogramLoss
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Experiment 1 Evaluation")
