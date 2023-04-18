@@ -1,25 +1,19 @@
 import os
 import sys
 import argparse
-from datetime import datetime
 
 # Add paths to import from external submodules and internal modules
 sys.path.append(os.path.join(os.path.dirname(__file__), 'external', 'audiolm-pytorch'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'external', 'encodec'))
 
 # Import necessary libraries and modules
-import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter  # Import TensorBoard SummaryWriter
 
-import audiolm_pytorch
-import encodec
-
-from utils.utils import *
-from datasets.wav_folder_dataset import WavFolderDataset
-from models.vqvae_model import VQVAE
-from losses.multi_scale_mel_spectrogram_loss import MultiScaleMelSpectrogramLoss 
+from pnc.datasets.wav_folder_dataset import WavFolderDataset
+from pnc.models.vqvae_model import VQVAE
+from pnc.losses.multi_scale_mel_spectrogram_loss import MultiScaleMelSpectrogramLoss
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Experiment 1 Training")
