@@ -7,6 +7,17 @@ import random
 import numpy as np
 import soundfile as sf
 
+
+def pytorch_worker_info(group=None):
+    rank, world_size = None, None
+    try:
+        world_size = torch.distributed.get_world_size(group)
+        rank = torch.distributed.get_rank(group)
+    except AttributeError:
+        pass
+    return rank, world_size, None, None  # TODO: the rest of the parameters
+
+
 def unique_timestamp_str():
     """
     Generate a unique timestamp string.
@@ -15,6 +26,7 @@ def unique_timestamp_str():
         str: A unique timestamp string in the format YYYY-MM-DD_HH-MM-SS.
     """
     return time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
+
 
 def wav_to_mel_spectrogram(waveform, sample_rate, n_mels=80, n_fft=1024, hop_length=256, win_length=None, window_fn="hann"):
     """
@@ -39,6 +51,7 @@ def wav_to_mel_spectrogram(waveform, sample_rate, n_mels=80, n_fft=1024, hop_len
     mel_spectrogram = librosa.feature.melspectrogram(y=waveform, sr=sample_rate, n_fft=n_fft, hop_length=hop_length, win_length=win_length, window=window_fn, n_mels=n_mels, power=1)
     return mel_spectrogram
 
+
 def mel_normalize(mel_spec, min_level_db=-100):
     # Convert MelSpectrogram to dB scale
     mel_db = librosa.power_to_db(mel_spec, ref=1.0)
@@ -47,6 +60,7 @@ def mel_normalize(mel_spec, min_level_db=-100):
     mel_norm_db = np.maximum(0, (mel_db - min_level_db) / -min_level_db)
     return mel_norm_db
 
+
 def mel_denormalize(mel_db, min_level_db=-100):
     # Denormalize MelSpectrogram in dB scale with minimum threshold
     mel_denorm_db = np.maximum(0, mel_db * -min_level_db) + min_level_db
@@ -54,6 +68,7 @@ def mel_denormalize(mel_db, min_level_db=-100):
     # Convert dB scale back to power spectrogram
     mel_spec = librosa.db_to_power(mel_denorm_db, ref=1.0)
     return mel_spec
+
 
 def mel_spectrogram_to_wav(mel_spec, sample_rate, n_mels=80, n_fft=1024, hop_length=256, win_length=None, window_fn="hann"):
     """
@@ -78,6 +93,7 @@ def mel_spectrogram_to_wav(mel_spec, sample_rate, n_mels=80, n_fft=1024, hop_len
 
     return waveform
 
+
 class RandomCrop:
     def __init__(self, crop_size):
         self.crop_size = crop_size
@@ -85,6 +101,7 @@ class RandomCrop:
     def __call__(self, waveform):
         start_idx = random.randint(0, waveform.shape[-1] - self.crop_size)
         return waveform[..., start_idx:start_idx + self.crop_size]
+
 
 if __name__ == "__main__":
     # Example usage of the helper functions
