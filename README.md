@@ -1,4 +1,4 @@
-dev notes:
+notes:
 
 1. scripts to get LibriTTS are in data/get_data_scripts
 2. to run an experiment run python run_test.py -c ./exp_configs/sound_reprod_lucid.yaml -n test.
