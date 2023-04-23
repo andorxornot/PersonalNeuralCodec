@@ -17,3 +17,4 @@ trainer:
 
 env:
   device: 0
+  run_folder: /home/dev/other/runs/

@@ -119,7 +119,7 @@ class SoundStreamTrainer(nn.Module):
         save_results_every: int = 100,
         save_model_every: int= 1000,
         log_losses_every: int= 1,
-        results_folder: str = './results',
+        run_folder: str = '../results',
         valid_frac: float = 0.05,
         random_split_seed: int = 42,
         use_ema: bool = True,
@@ -256,12 +256,12 @@ class SoundStreamTrainer(nn.Module):
 
         self.apply_grad_penalty_every = apply_grad_penalty_every
 
-        self.results_folder = Path(results_folder)
+        self.run_folder = Path(run_folder)
 
-        if self.is_main and force_clear_prev_results is True or (not exists(force_clear_prev_results) and len([*self.results_folder.glob('**/*')]) > 0 and yes_or_no('do you want to clear previous experiment checkpoints and results?')):
-            rmtree(str(self.results_folder))
+        if self.is_main and force_clear_prev_results is True or (not exists(force_clear_prev_results) and len([*self.run_folder.glob('**/*')]) > 0 and yes_or_no('do you want to clear previous experiment checkpoints and results?')):
+            rmtree(str(self.run_folder))
 
-        self.results_folder.mkdir(parents = True, exist_ok = True)
+        self.run_folder.mkdir(parents = True, exist_ok = True)
 
         # Initialize experiment trackers if an external Accelerator is not passed in
         if not accelerator:
@@ -477,20 +477,20 @@ class SoundStreamTrainer(nn.Module):
                     recons = model(wave, return_recons_only = True)
 
                 for ind, recon in enumerate(recons.unbind(dim = 0)):
-                    filename = str(self.results_folder / f'sample_{label}.flac')
+                    filename = str(self.run_folder / f'sample_{label}.flac')
                     torchaudio.save(filename, recon.cpu().detach(), self.unwrapped_soundstream.target_sample_hz)
 
-            self.print(f'{steps}: saving to {str(self.results_folder)}')
+            self.print(f'{steps}: saving to {str(self.run_folder)}')
 
         # save model every so often
 
         self.accelerator.wait_for_everyone()
 
         if self.is_main and not (steps % self.save_model_every):
-            model_path = str(self.results_folder / f'soundstream.{steps}.pt')
+            model_path = str(self.run_folder / f'soundstream.{steps}.pt')
             self.save(model_path)
 
-            self.print(f'{steps}: saving model to {str(self.results_folder)}')
+            self.print(f'{steps}: saving model to {str(self.run_folder)}')
 
         self.steps += 1
         return logs

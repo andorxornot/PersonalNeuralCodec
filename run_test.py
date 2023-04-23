@@ -15,11 +15,18 @@ parser.add_argument(
     help="confir paht",
 )
 
+parser.add_argument(
+    "-n",
+    "--run_name",
+    default='exp_one',
+    help="run or experiment name",
+)
+
 
 args = parser.parse_args()
 conf = omg.load(args.config)
 
-
+run_folder = os.path.join(conf.env.run_folder, args.run_name)
 
 if conf.debug:
      conf.trainer.num_train_steps = 10
@@ -45,6 +52,7 @@ trainer = SoundStreamTrainer(
     save_model_every =  conf.trainer.save_model_every,
     num_train_steps =  conf.trainer.num_train_steps,
     valid_frac = conf.trainer.valid_frac,
+    run_folder = run_folder,
 ).to(conf.env.device)
 
 trainer.train()
