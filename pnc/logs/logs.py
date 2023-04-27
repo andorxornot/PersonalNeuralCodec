@@ -1,9 +1,12 @@
-import torch
 import shutil
-from pathlib import Path
-from contextlib import contextmanager
 
-from .base import LoggerBase, LoggerOnline
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Union
+
+import torch
+
+from .base import LoggerBase, LoggerOnline, MessageType
 from .config import print_cfg, save_cfg
 from .checkpoint import save_source_files
 from .checkpoint import get_checkpoint_folder
@@ -91,6 +94,40 @@ class LoggerUnited(LoggerBase, LoggerOnline):
                 batch_time=batch_time,
                 max_iteration=max_iteration,
             )
+
+    def log(
+            self,
+            message: Union[dict, str],
+            mtype: MessageType = None,
+            main_rank_only: bool = False,
+            to_stdout: bool = True,
+            to_file: bool = True,
+            **kwargs
+    ):
+        """
+        Logs message to stdout/file.
+
+        Args:
+            message (Union[dict, str]): message or logs dictionary to log
+            mtype (MessageType): message type (DEBUG, INFO, WARNING, ERROR, FATAL)
+            main_rank_only (bool): log the process with rank 0 only
+            to_stdout (bool): whether write to stdout (default: True)
+            to_file (bool): whether write to file (default: True)
+
+        Returns:
+            None:
+
+        """
+        if not isinstance(message, dict):
+            super().log(message, mtype, main_rank_only, to_stdout, to_file)
+        else:
+            for k, v in message.items():
+                if self.use_online and isinstance(v, (int, float)):
+                    self.online_logger.add_scalar(k, v, **kwargs)
+                elif self.use_online and isinstance(v, str):
+                    self.online_logger.add_text(k, v, **kwargs)
+                elif self.use_online and isinstance(v, dict):
+                    self.online_logger.add_scalars(k, v, **kwargs)
 
     def log_metrics(self, tab=None, metrics=None, phase_idx=0):
         """
