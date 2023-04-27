@@ -124,7 +124,7 @@ class LoggerTensorboard(LoggerOnline):
         self.cur_run = None
         self._runs_stack = []
         self.flush_secs = flush_secs
-        self.tb_writer = self.tb_class(log_dir=path_base, flush_secs=flush_secs)
+        self.writer = self.tb_class(log_dir=path_base, flush_secs=flush_secs)
         self.log_params = log_params
         self.log_params_every_n_iterations = log_params_frequency
 
@@ -137,8 +137,8 @@ class LoggerTensorboard(LoggerOnline):
         log_dir = self.path_base
         if run_name is not None:
             log_dir += f"/{run_name}"
-        self.tb_writer.close()
-        self.tb_writer = self.tb_class(log_dir=log_dir, flush_secs=self.flush_secs)
+        self.writer.close()
+        self.writer = self.tb_class(log_dir=log_dir, flush_secs=self.flush_secs)
 
         if run_name is not None:
             self.path_csv += f"/{run_name}"
@@ -162,7 +162,7 @@ class LoggerTensorboard(LoggerOnline):
             csv.write(f"phase_index,{','.join(scalars.keys())}\n")
         # Log train/test accuracy
         metrics_string = f"{phase_index}"
-        self.tb_writer.add_scalars(
+        self.writer.add_scalars(
             tab,
             scalars,
             global_step=phase_index,
@@ -193,7 +193,7 @@ class LoggerTensorboard(LoggerOnline):
 
         for metric_name, score in metrics.items():
             t = f"{tab}/Process {rank}/{metric_name}"
-            self.tb_writer.add_scalar(
+            self.writer.add_scalar(
                 tag=t,
                 scalar_value=score,
                 global_step=phase_index,
@@ -211,7 +211,7 @@ class LoggerTensorboard(LoggerOnline):
         if audio is None:
             return
         tag = tag or Tabs.AUDIO
-        self.tb_writer.add_audio(
+        self.writer.add_audio(
             tag, audio,
             # global_step=phase_index,
             # sample_rate=sample_rate,
@@ -223,7 +223,7 @@ class LoggerTensorboard(LoggerOnline):
             return
         # name = name or 'Default'
         tag = f"{Tabs.HIST}/{name}" if name else Tabs.HIST
-        self.tb_writer.add_histogram(
+        self.writer.add_histogram(
             tag=tag, values=values, global_step=phase_index
         )
 
@@ -231,7 +231,7 @@ class LoggerTensorboard(LoggerOnline):
         if embedding is None or tag is None:
             return
         tag = f"{Tabs.EMBED}/{tag}" if tag else Tabs.EMBED
-        self.tb_writer.add_embedding(
+        self.writer.add_embedding(
             embedding,
             # metadata=None,
             # label_img=None,
@@ -243,7 +243,7 @@ class LoggerTensorboard(LoggerOnline):
     def add_graph(self, model=None, inputs=None):
         if model is None or inputs is None:
             return
-        self.tb_writer.add_graph(
+        self.writer.add_graph(
             model, input_to_model=inputs, verbose=False, use_strict_trace=True
         )
 
@@ -251,7 +251,7 @@ class LoggerTensorboard(LoggerOnline):
         if images is None:
             return
         tag = tag or Tabs.IMAGE
-        self.tb_writer.add_images(tag, images)
+        self.writer.add_images(tag, images)
 
     def on_update(
         self,
@@ -273,7 +273,7 @@ class LoggerTensorboard(LoggerOnline):
             or (iteration <= 100 and iteration % 5 == 0)
         ):
             logging.info(f"Logging metrics. Iteration {iteration}")
-            self.tb_writer.add_scalar(
+            self.writer.add_scalar(
                 tag=f"{Tabs.TRAIN}/Loss",
                 scalar_value=round(loss.data.cpu().item(), 5),
                 global_step=iteration
@@ -293,7 +293,7 @@ class LoggerTensorboard(LoggerOnline):
                 batch_times = [0]
 
             batch_time_avg_s = sum(batch_times) / max(len(batch_times), 1)
-            self.tb_writer.add_scalar(
+            self.writer.add_scalar(
                 tag=f"{Tabs.SPEED}/Batch_processing_time_ms",
                 scalar_value=int(1000.0 * batch_time_avg_s),
                 global_step=iteration,
@@ -303,7 +303,7 @@ class LoggerTensorboard(LoggerOnline):
             if max_iteration is not None:
                 avg_time = sum(batch_times) / len(batch_times)
                 eta_secs = avg_time * (max_iteration - iteration)
-                self.tb_writer.add_scalar(
+                self.writer.add_scalar(
                     tag=f"{Tabs.SPEED}/ETA_hours",
                     scalar_value=eta_secs / 3600.0,
                     global_step=iteration,
@@ -312,27 +312,27 @@ class LoggerTensorboard(LoggerOnline):
             # GPU Memory
             if torch.cuda.is_available():
                 # Memory actually being used
-                self.tb_writer.add_scalar(
+                self.writer.add_scalar(
                     tag=f"{Tabs.MEMORY}/Peak_GPU_Memory_allocated_MiB",
                     scalar_value=torch.cuda.max_memory_allocated() / BYTE_TO_MiB,
                     global_step=iteration,
                 )
 
                 # Memory reserved by PyTorch's memory allocator
-                self.tb_writer.add_scalar(
+                self.writer.add_scalar(
                     tag=f"{Tabs.MEMORY}/Peak_GPU_Memory_reserved_MiB",
                     scalar_value=torch.cuda.max_memory_reserved() / BYTE_TO_MiB,
                     global_step=iteration,
                 )
 
-                self.tb_writer.add_scalar(
+                self.writer.add_scalar(
                     tag=f"{Tabs.MEMORY}/Current_GPU_Memory_reserved_MiB",
                     scalar_value=torch.cuda.memory_reserved() / BYTE_TO_MiB,
                     global_step=iteration,
                 )
 
     def __del__(self):
-        self.tb_writer.close()
+        self.writer.close()
 
 
 __all__ = ['tensorboard_logger_factory', 'LoggerTensorboard']
