@@ -1,6 +1,6 @@
 import os
 import argparse
-from omegaconf import OmegaConf as OMG
+from pnc.config import OmegaConf as OMG
 from external.lucid_soundstream.soundstream import SoundStream
 from external.lucid_soundstream.trainer import SoundStreamTrainer
 from external.lucid_soundstream.debug_dataset import make_placeholder_dataset
