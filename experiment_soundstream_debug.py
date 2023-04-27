@@ -25,6 +25,14 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "-o",
+    "--run-output",
+    dest="env.run_folder",
+    default="../results",
+    help="experiment/run output directory root"
+)
+
+parser.add_argument(
     "--debug",
     action="store_true",
     help="run in debug mode"
