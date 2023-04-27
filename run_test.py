@@ -1,58 +1,71 @@
 import os
 import argparse
-from omegaconf import OmegaConf as omg
-from external.lucid_soundstream.soundstream import SoundStream 
-from external.lucid_soundstream.trainer import SoundStreamTrainer 
+from omegaconf import OmegaConf as OMG
+from external.lucid_soundstream.soundstream import SoundStream
+from external.lucid_soundstream.trainer import SoundStreamTrainer
 from external.lucid_soundstream.debug_dataset import make_placeholder_dataset
-
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
     "-c",
     "--config",
-    default='./base_config.yaml',
-    help="confir paht",
+    default="./config_default.yaml",
+    help="config path"
 )
 
 parser.add_argument(
     "-n",
-    "--run_name",
-    default='exp_one',
-    help="run or experiment name",
+    "--run-name",
+    dest="env.run_name",
+    default="experiment-default",
+    help="experiment/run name"
 )
 
-
-args = parser.parse_args()
-conf = omg.load(args.config)
-
-run_folder = os.path.join(conf.env.run_folder, args.run_name)
-
-if conf.debug:
-     conf.trainer.num_train_steps = 10
-     folder = conf.trainer.dataset_folder
-     folder = './debug_dataset/'
-     conf.trainer.dataset_folder = folder
-     make_placeholder_dataset(folder)
-
-soundstream = SoundStream(
-    codebook_size = conf.model.codebook_size,
-    rq_num_quantizers = conf.model.rq_num_quantizers,
+parser.add_argument(
+    "--debug",
+    action="store_true",
+    help="run in debug mode"
 )
 
-print(conf)
+parser.add_argument(
+    "-d",
+    "--device",
+    dest='env.device',
+    default=0,
+    help="select device (CPU | 0 | 1 | 2 | ...)"
+)
+
+# args = parser.parse_args()
+cfg = OMG.from_cli(parser)  # omg.load(args.config)
+
+run_folder = os.path.join(cfg.env.run_folder, cfg.env.run_name)
+
+if cfg.debug:
+    cfg.trainer.num_train_steps = 10
+    # folder = cfg.trainer.dataset_folder
+    folder = './debug_dataset/'
+    cfg.trainer.dataset_folder = folder
+    make_placeholder_dataset(folder)
+
+sound_stream = SoundStream(
+    codebook_size=cfg.model.codebook_size,
+    rq_num_quantizers=cfg.model.rq_num_quantizers,
+)
+
+print(cfg)
 
 trainer = SoundStreamTrainer(
-    soundstream,
-    folder = conf.trainer.dataset_folder,
-    batch_size = conf.trainer.batch_size,
-    grad_accum_every = conf.trainer.grad_accum_every,       
-    data_max_length =  conf.trainer.data_max_length,
-    save_results_every =  conf.trainer.save_results_every,
-    save_model_every =  conf.trainer.save_model_every,
-    num_train_steps =  conf.trainer.num_train_steps,
-    valid_frac = conf.trainer.valid_frac,
-    run_folder = run_folder,
-).to(conf.env.device)
+    sound_stream,
+    folder=cfg.trainer.dataset_folder,
+    batch_size=cfg.trainer.batch_size,
+    grad_accum_every=cfg.trainer.grad_accum_every,
+    data_max_length=cfg.trainer.data_max_length,
+    save_results_every=cfg.trainer.save_results_every,
+    save_model_every=cfg.trainer.save_model_every,
+    num_train_steps=cfg.trainer.num_train_steps,
+    valid_frac=cfg.trainer.valid_frac,
+    run_folder=run_folder,
+).to(cfg.env.device)
 
 trainer.train()
