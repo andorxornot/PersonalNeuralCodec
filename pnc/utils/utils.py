@@ -1,11 +1,19 @@
-import os
-import sys
-import time
-import torch
-import librosa
 import random
-import numpy as np
-import soundfile as sf
+import time
+
+# TODO: remove try...except (this is for debugging - avoid dependencies)
+try:
+    import librosa
+except ImportError:
+    ...
+try:
+    import numpy as np
+except ImportError:
+    ...
+try:
+    import torch
+except ImportError:
+    ...
 
 
 def pytorch_worker_info(group=None):
@@ -104,6 +112,8 @@ class RandomCrop:
 
 
 if __name__ == "__main__":
+    import soundfile as sf
+
     # Example usage of the helper functions
     print(unique_timestamp_str())
 
