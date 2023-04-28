@@ -66,11 +66,11 @@ def cast_tuple(t):
     return t if isinstance(t, (tuple, list)) else (t,)
 
 
-def yes_or_no(question):
+def yes_or_no(question, timeout=10):
     # answer = input(f'{question} (y/n) ')
-    print(f"{question} ([y]/n):")
-    answer, _, _ = select([STDIN], [], [], 10)
-    answer = STDIN.readline().strip() if answer else 'y'
+    print(f"{question} (y/[n], timeout = {timeout} sec):")
+    answer, _, _ = select([STDIN], [], [], timeout)
+    answer = STDIN.readline().strip() if answer else 'no'
     return answer.lower() in ('yes', 'y')
 
 
