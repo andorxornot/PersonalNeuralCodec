@@ -71,10 +71,10 @@ def yes_or_no(question, timeout=10):
     # answer = input(f'{question} (y/n) ')
     # FIXME: this is stub because of select's weird behaviour
     print(f"{question} (y/[n], timeout = {timeout} sec):")
-    # answer, _, _ = select([STDIN], [], [], timeout)
-    # answer = STDIN.readline().strip() if answer else 'no'
-    sleep(timeout)
-    answer = 'no'
+    answer, _, _ = select([STDIN], [], [], timeout)
+    answer = STDIN.readline().strip() if answer else 'no'
+    # sleep(timeout)
+    # answer = 'no'
     return answer.lower() in ('yes', 'y')
 
 
@@ -537,4 +537,3 @@ class SoundStreamTrainer(nn.Module):
             log_fn(logs)
 
         self.print('Training complete')
-        exit(0)

@@ -87,4 +87,5 @@ trainer = SoundStreamTrainer(
 ).to(cfg.env.device)
 
 trainer.train()
+logger.shutdown_logging()
 exit(0)
