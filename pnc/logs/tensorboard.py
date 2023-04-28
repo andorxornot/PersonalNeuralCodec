@@ -61,13 +61,16 @@ def tensorboard_logger_factory(cfg):
 
     # Get the tensorboard directory and check tensorboard is installed
     path_tensorboard, path_tensorboard_csv = tensorboard_paths(cfg)
-    flush_secs = cfg.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
+    # flush_secs = cfg.TENSORBOARD_SETUP.FLUSH_EVERY_N_MIN * 60
+    flush_secs = cfg.experiment.log_tensorboard_flush_frequency * 60
     return LoggerTensorboard(
         path_base=path_tensorboard,
         path_csv=path_tensorboard_csv,
         flush_secs=flush_secs,
-        log_params=cfg.TENSORBOARD_SETUP.LOG_PARAMS,
-        log_params_frequency=cfg.TENSORBOARD_SETUP.LOG_PARAMS_EVERY_N_ITERS,
+        # log_params=cfg.experiment.log_tensorboard_params,
+        log_params=cfg.experiment.log_tensorboard_params,
+        # log_params_frequency=cfg.TENSORBOARD_SETUP.LOG_PARAMS_EVERY_N_ITERS,
+        log_params_frequency=cfg.experiment.log_tensorboard_params_frequency
     )
 
 
