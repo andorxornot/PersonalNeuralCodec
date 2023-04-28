@@ -160,7 +160,7 @@ class LoggerTensorboard(LoggerOnline):
         scalars = scalars or {}
         name = tab.replace('/', '_')  # "_".join(tab.split("/"))
         csv_name = osp.join(f"{self.path_csv}", f"{name}_scalars.csv")
-        csv = open(csv_name, "a")
+        csv = open(csv_name, "a+")
         if is_file_empty(csv_name):
             csv.write(f"phase_index,{','.join(scalars.keys())}\n")
         # Log train/test accuracy
@@ -188,7 +188,7 @@ class LoggerTensorboard(LoggerOnline):
         tab = tab or Tabs.TRAIN
         metrics = metrics or {}
         csv_name = f"{self.path_csv}/{tab}_metrics.csv"
-        csv = open(csv_name, "a")
+        csv = open(csv_name, "a+")
         if is_file_empty(csv_name):
             csv.write(f"phase_index,process,{','.join(metrics.keys())}\n")
         # Log train/test accuracy
