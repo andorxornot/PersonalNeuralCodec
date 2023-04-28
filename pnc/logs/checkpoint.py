@@ -60,7 +60,7 @@ def save_source_files(config, logger: LoggerBase):
     for directory in directories_source:
         pyfiles.extend([
             osp.realpath(y) for x in walk(directory)
-            for y in glob(osp.join(x[0].decode(encoding='utf-8'), '*.py'))
+            for y in glob(osp.join(f"{x[0]}", '*.py'))
         ])
     # Replace source prefix with target (checkpoints) prefix and copy
     for pyfile in pyfiles:
