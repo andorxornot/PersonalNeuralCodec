@@ -1,5 +1,7 @@
-import os
 import argparse
+
+from datetime import datetime
+from os import path as osp
 
 from pnc.config import OmegaConf as OMG
 from pnc.logs import LoggerUltimate
@@ -8,6 +10,8 @@ from pnc.soundstream.trainer import SoundStreamTrainer
 from pnc.soundstream.debug_dataset import make_placeholder_dataset
 
 parser = argparse.ArgumentParser()
+
+timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d-%H-%M-%S')
 
 parser.add_argument(
     "-c",
@@ -19,15 +23,15 @@ parser.add_argument(
 parser.add_argument(
     "-n",
     "--run-name",
-    dest="env.run_name",
-    default="experiment-default",
-    help="experiment/run name"
+    dest="experiment.name",
+    default=f"{timestamp}",
+    help=f"experiment/run name (default: {timestamp})"
 )
 
 parser.add_argument(
     "-o",
     "--run-output",
-    dest="env.run_folder",
+    dest="experiment.path_output",
     default="../results",
     help="experiment/run output directory root"
 )
@@ -49,7 +53,7 @@ parser.add_argument(
 # args = parser.parse_args()
 cfg = OMG.from_cli(parser)  # omg.load(args.config)
 
-run_folder = os.path.join(cfg.env.run_folder, cfg.env.run_name)
+run_folder = osp.join(cfg.experiment.path_output, cfg.experiment.name)
 
 if cfg.debug:
     cfg.trainer.num_train_steps = 10
