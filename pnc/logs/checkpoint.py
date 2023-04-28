@@ -6,58 +6,72 @@ from .base import LoggerBase, MessageType
 from ..utils import pytorch_worker_info
 
 
-PREFIX_SOURCE = 'project_source'
+# prefix_sources = 'project_source'
 
 
 def get_checkpoint_folder(config):
     """
-    Check, create and return the checkpoint folder. User can specify their own
-    checkpoint directory otherwise the default "." is used.
+    Check, create and return the checkpoint folder. Default path in config:
+    <experiment.path_output>/<experiment.name>/<experiment.path_checkpoints>
     """
-    path_target = config.EXPERIMENT.DIR
+    path_checkpoints = osp.join(config.experiment.path_output,
+                                config.experiment.name,
+                                config.experiment.path_checkpoints)
 
-    makedirs(path_target, exist_ok=True)
+    makedirs(path_checkpoints, exist_ok=True)
     assert osp.exists(
-        config.EXPERIMENT.DIR
+        path_checkpoints
     ), (
-        f"Please specify valid 'config.CHECKPOINT.DIR' directory."
-        f" Failed: {config.CHECKPOINT.DIR}"
+        f"Please specify valid experiment directories."
+        f" Failed to create: {path_checkpoints}."
+        f" Refer to doc:\n{get_checkpoint_folder.__doc__}"
     )
-    return path_target
+    return path_checkpoints
 
 
 def save_source_files(config, logger: LoggerBase):
     rank, _, _, _ = pytorch_worker_info()
-    checkpoint_folder = get_checkpoint_folder(config)
+    path_checkpoints = get_checkpoint_folder(config)
+    prefix_sources = config.experiment.path_checkpoint_sources
+    # path_checkpoints = osp.join(path_checkpoints, prefix_sources)
     logger.log(
-        f"Saving source files to {checkpoint_folder}/{PREFIX_SOURCE}",
+        f"Saving source files to {osp.join(path_checkpoints, prefix_sources)}",
         MessageType.INFO,
         main_rank_only=True,
     )
+    path_project_root = osp.realpath(config.experiment.path_project_root)
     assert osp.exists(
-        config.PROJECT.ROOT
+        path_project_root
     ), (
-        f"Please specify  valid 'config.PROJECT.ROOT' directory."
-        f" Failed: {config.PROJECT.ROOT}"
+        f"Please specify  valid 'config.experiment.path_project_root'"
+        f" directory. Failed: '{path_project_root}'"
     )
+
+    # Get real directories from <experiment.project_checkpoint_directories>.
+    # Exclude <experiment.path_output> patterns from the list
     directories_source = [
-        osp.join(config.PROJECT.ROOT, x) for x in config.PROJECT.DEFAULT_DIRS
+        osp.realpath(osp.join(path_project_root, x))
+        for x in config.experiment.project_checkpoint_directories
+        if x not in config.experiment.path_output
     ]
-    pyfiles = glob(osp.join(config.PROJECT.ROOT, '*.py'))
+    # Get all Python sources from the <path_project_root>
+    pyfiles = glob(osp.join(path_project_root, '*.py'))
+    # Append Python sources from the <project_checkpoint_directories>
     for directory in directories_source:
         pyfiles.extend([
-            y for x in walk(directory)
+            osp.realpath(y) for x in walk(directory)
             for y in glob(osp.join(x[0].decode(encoding='utf-8'), '*.py'))
         ])
+    # Replace source prefix with target (checkpoints) prefix and copy
     for pyfile in pyfiles:
         source = pyfile
         target = osp.join(
-            f"{checkpoint_folder}", f"{PREFIX_SOURCE}",
-            f'{pyfile.replace(config.PROJECT.ROOT, "")}',
+            f"{path_checkpoints}", f"{prefix_sources}",
+            f"{pyfile.replace(path_project_root, '')}".lstrip(osp.sep)
         )
-        path_target = osp.basename(target)
+        path_target_directory = osp.basename(target)
         if rank == 0:
-            makedirs(path_target, exist_ok=True)
+            makedirs(path_target_directory, exist_ok=True)
             copy(source, target)
 
 

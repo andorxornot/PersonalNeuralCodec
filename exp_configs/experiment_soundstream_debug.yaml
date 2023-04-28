@@ -2,6 +2,18 @@
 
 debug: true
 
+experiment:
+  name: ???
+  path_output: "results"  # ./results relative to experiment working directory
+  path_checkpoints: "checkpoints"  # relative to "<path_output>/<name>/"
+  path_checkpoint_sources: "source_files"  # relative to "<path_checkpoints>/"
+  path_logs: "logs"  # relative to "<path_output>/<name>/"
+  path_project_root: "."  # set to proper path if start from another directory
+  project_checkpoint_directories:  # none of this should not be in <path_output>
+    - "configs"
+    - "experiments"
+    - "pnc"
+
 model:
   codebook_size: 1024
   rq_num_quantizers: 8
