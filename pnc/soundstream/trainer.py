@@ -2,6 +2,7 @@ from pathlib import Path
 from select import select
 from shutil import rmtree
 from sys import stdin as STDIN
+from time import sleep
 
 from beartype.typing import Union, List
 from typing_extensions import Annotated
@@ -68,9 +69,12 @@ def cast_tuple(t):
 
 def yes_or_no(question, timeout=10):
     # answer = input(f'{question} (y/n) ')
+    # FIXME: this is stub because of select's weird behaviour
     print(f"{question} (y/[n], timeout = {timeout} sec):")
-    answer, _, _ = select([STDIN], [], [], timeout)
-    answer = STDIN.readline().strip() if answer else 'no'
+    # answer, _, _ = select([STDIN], [], [], timeout)
+    # answer = STDIN.readline().strip() if answer else 'no'
+    sleep(timeout)
+    answer = 'no'
     return answer.lower() in ('yes', 'y')
 
 
