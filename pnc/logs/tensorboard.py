@@ -190,7 +190,7 @@ class LoggerTensorboard(LoggerOnline):
         csv_name = f"{self.path_csv}/{tab}_metrics.csv"
         csv = open(csv_name, "a")
         if is_file_empty(csv_name):
-            csv.write(f"phase_idx,process,{','.join(metrics.keys())}\n")
+            csv.write(f"phase_index,process,{','.join(metrics.keys())}\n")
         # Log train/test accuracy
         metrics_string = f"{phase_index},{rank}"
 

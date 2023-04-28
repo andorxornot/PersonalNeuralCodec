@@ -124,9 +124,9 @@ class LoggerUnited(LoggerBase, LoggerOnline):
             if self.use_online:
                 self.online_logger.log_scalars(
                     scalars=message,
-                    phase_idx=(
+                    phase_index=(
                         kwargs['global_step'] if 'global_step' in kwargs else
-                        kwargs['phase_idx'] if 'phase_idx' in kwargs else 0
+                        kwargs['phase_index'] if 'phase_index' in kwargs else 0
                     )
                 )
             # for k, v in message.items():
@@ -137,14 +137,14 @@ class LoggerUnited(LoggerBase, LoggerOnline):
             #     elif self.use_online and isinstance(v, dict):
             #         self.online_logger.add_scalars(k, v, **kwargs)
 
-    def log_metrics(self, tab=None, metrics=None, phase_idx=0):
+    def log_metrics(self, tab=None, metrics=None, phase_index=0):
         """
         Log metrics to online logger.
 
         Args:
             tab (str): table name
             metrics (dict): format to log metrics (e.g. {name: value})
-            phase_idx (int): step index to bind log to
+            phase_index (int): step index to bind log to
 
         Returns:
             None:
@@ -154,23 +154,23 @@ class LoggerUnited(LoggerBase, LoggerOnline):
             rank, _, _, _ = pytorch_worker_info()
             if self.use_ddp and rank != 0:
                 return
-            self.online_logger.log_metrics(tab, metrics, phase_idx, rank)
+            self.online_logger.log_metrics(tab, metrics, phase_index, rank)
 
-    def log_scalars(self, tab=None, scalars=None, phase_idx=0):
+    def log_scalars(self, tab=None, scalars=None, phase_index=0):
         """
         Log scalars to online logger.
 
         Args:
             tab (str): table name
             scalars (dict): format to log metrics (e.g. {name: value})
-            phase_idx (int): step index to bind log to
+            phase_index (int): step index to bind log to
 
         Returns:
             None:
 
         """
         if self.use_online:
-            self.online_logger.log_scalars(tab, scalars, phase_idx)
+            self.online_logger.log_scalars(tab, scalars, phase_index)
 
     def save_checkpoint(self, state, is_best, filename=None, only_main_rank=True):
         """
@@ -201,10 +201,10 @@ class LoggerUnited(LoggerBase, LoggerOnline):
             print(f"Unable to save checkpoint to '{filename}' at this time due to {e}")
 
     # Wrappers for tensorboard functions
-    def add_histogram(self, values=None, phase_idx=0, name="histogram"):
+    def add_histogram(self, values=None, phase_index=0, name="histogram"):
         if self.use_online:
             self.online_logger.add_histogram(
-                values=values, phase_index=phase_idx, name=name
+                values=values, phase_index=phase_index, name=name
             )
 
     def add_embedding(self, embedding=None, tag=None, phase_index=None):
