@@ -1,5 +1,7 @@
 from pathlib import Path
+from select import select
 from shutil import rmtree
+from sys import stdin as STDIN
 
 from beartype.typing import Union, List
 from typing_extensions import Annotated
@@ -65,7 +67,10 @@ def cast_tuple(t):
 
 
 def yes_or_no(question):
-    answer = input(f'{question} (y/n) ')
+    # answer = input(f'{question} (y/n) ')
+    print(f"{question} ([y]/n):")
+    answer, _, _ = select([STDIN], [], [], 10)
+    answer = STDIN.readline().strip() if answer else 'y'
     return answer.lower() in ('yes', 'y')
 
 
