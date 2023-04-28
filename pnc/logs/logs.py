@@ -121,13 +121,21 @@ class LoggerUnited(LoggerBase, LoggerOnline):
         if not isinstance(message, dict):
             super().log(message, mtype, main_rank_only, to_stdout, to_file)
         else:
-            for k, v in message.items():
-                if self.use_online and isinstance(v, (int, float)):
-                    self.online_logger.add_scalar(k, v, **kwargs)
-                elif self.use_online and isinstance(v, str):
-                    self.online_logger.add_text(k, v, **kwargs)
-                elif self.use_online and isinstance(v, dict):
-                    self.online_logger.add_scalars(k, v, **kwargs)
+            if self.use_online:
+                self.online_logger.log_scalars(
+                    scalars=message,
+                    phase_idx=(
+                        kwargs['global_step'] if 'global_step' in kwargs else
+                        kwargs['phase_idx'] if 'phase_idx' in kwargs else 0
+                    )
+                )
+            # for k, v in message.items():
+            #     if self.use_online and isinstance(v, (int, float)):
+            #         self.online_logger.add_scalar(k, v, **kwargs)
+            #     elif self.use_online and isinstance(v, str):
+            #         self.online_logger.add_text(k, v, **kwargs)
+            #     elif self.use_online and isinstance(v, dict):
+            #         self.online_logger.add_scalars(k, v, **kwargs)
 
     def log_metrics(self, tab=None, metrics=None, phase_idx=0):
         """
