@@ -322,4 +322,25 @@ class LoggerBase:
         torch.save(content, out_file)
 
 
-__all__ = ['LoggerBase', 'LoggerOnline', 'MessageType']
+def get_path_logs(config):
+    """
+    Check, create and return the logs' directory. Default path in config:
+    <experiment.path_output>/<experiment.name>/<experiment.path_logs>
+    """
+    path_logs = osp.join(config.experiment.path_output,
+                         config.experiment.name,
+                         config.experiment.path_logs)
+
+    makedirs(path_logs, exist_ok=True)
+    assert osp.exists(
+        path_logs
+    ), (
+        f"Please specify valid experiment directories."
+        f" Failed to create: {path_logs}."
+        f" Refer to doc:\n{get_path_logs.__doc__}"
+    )
+    return path_logs
+
+
+__all__ = ['get_path_logs', 'LoggerBase', 'LoggerOnline', 'MessageType']
+

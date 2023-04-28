@@ -6,9 +6,7 @@ from os import path as osp
 
 import torch
 
-from .base import LoggerOnline
-from .checkpoint import get_checkpoint_folder
-from .logs import get_log_folder
+from .base import LoggerOnline, get_path_logs
 from .io import is_file_empty, makedirs
 
 
@@ -39,7 +37,7 @@ def tensorboard_paths(cfg):
     Returns:
         path_tensorboard (str): tensorboard output directory path
     """
-    path_logs = get_log_folder(cfg)
+    path_logs = get_path_logs(cfg)
     path_tensorboard = osp.join(path_logs, cfg.experiment.path_logs_tensorboard)
     logging.info(f"Tensorboard path = {path_tensorboard}")  # FIXME: to logger
     makedirs(path_tensorboard, exist_ok=True)
