@@ -532,4 +532,4 @@ class SoundStreamTrainer(nn.Module):
             logs = self.train_step()
             log_fn(logs)
 
-        self.print('training complete')
+        self.print('Training complete')

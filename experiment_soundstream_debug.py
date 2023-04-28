@@ -87,3 +87,4 @@ trainer = SoundStreamTrainer(
 ).to(cfg.env.device)
 
 trainer.train()
+exit(0)
