@@ -1,6 +1,6 @@
 from pprint import pformat
 
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, OmegaConf, ListConfig
 
 from .base import LoggerBase, MessageType
 from .checkpoint import get_checkpoint_folder
@@ -39,11 +39,11 @@ def save_cfg(cfg: DictConfig, logger: LoggerBase):
         MessageType.INFO,
         main_rank_only=True,
     )
-    if isinstance(cfg, DictConfig) and rank == 0:
+    if isinstance(cfg, (DictConfig, ListConfig)) and not rank:
         OmegaConf.save(config=cfg, f=f"{checkpoint_folder}/config.yaml")
     else:
         logger.log(
-            f"Config is not of 'DictConfig' type!",
+            f"Config is not of 'DictConfig' or 'ListConfig' type!",
             MessageType.ERROR,
             main_rank_only=True
         )
