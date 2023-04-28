@@ -21,7 +21,7 @@ def pytorch_worker_info(group=None):
     try:
         world_size = torch.distributed.get_world_size(group)
         rank = torch.distributed.get_rank(group)
-    except AttributeError:
+    except (AttributeError, RuntimeError):
         pass
     return rank, world_size, None, None  # TODO: the rest of the parameters
 
