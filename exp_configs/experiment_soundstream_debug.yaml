@@ -8,6 +8,7 @@ experiment:
   path_checkpoints: "checkpoints"  # relative to "<path_output>/<name>/"
   path_checkpoint_sources: "source_files"  # relative to "<path_checkpoints>/"
   path_logs: "logs"  # relative to "<path_output>/<name>/"
+  path_logs_tensorboard: "tensorboard"  # relative to <path_logs>
   log_tensorboard_flush_frequency: 1  # every N minutes
   log_tensorboard_params: true  # log params or not (true/false)
   log_tensorboard_params_frequency: 100  # every N iterations

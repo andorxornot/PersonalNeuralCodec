@@ -8,6 +8,7 @@ import torch
 
 from .base import LoggerOnline
 from .checkpoint import get_checkpoint_folder
+from .logs import get_log_folder
 from .io import is_file_empty, makedirs
 
 
@@ -36,16 +37,17 @@ def tensorboard_paths(cfg):
         cfg (AttrDict): User specified config file containing the settings for the
                         Tensorboard as well as log directory, logging frequency etc.
     Returns:
-        tensorboard_dir (str): output directory path
+        path_tensorboard (str): tensorboard output directory path
     """
-    path_checkpoint = get_checkpoint_folder(cfg)
-    path_tensorboard = f"{path_checkpoint}/tb_logs"
-    logging.info(f"Tensorboard dir: {path_tensorboard}")  # FIXME: to logger
-    makedirs(path_tensorboard)
+    path_logs = get_log_folder(cfg)
+    path_tensorboard = osp.join(path_logs, cfg.experiment.path_logs_tensorboard)
+    logging.info(f"Tensorboard path = {path_tensorboard}")  # FIXME: to logger
+    makedirs(path_tensorboard, exist_ok=True)
 
-    path_tensorboard_csv = f"{path_checkpoint}/tb_csv"
-    logging.info(f"Tensorboard csv dir: {path_tensorboard_csv}")  # FIXME: ^
-    makedirs(path_tensorboard_csv)
+    path_tensorboard_csv = osp.join(path_logs,
+                                    cfg.experiment.path_logs_tensorboard, 'csv')
+    logging.info(f"Tensorboard csv path = {path_tensorboard_csv}")  # FIXME: ^
+    makedirs(path_tensorboard_csv, exist_ok=True)
     return path_tensorboard, path_tensorboard_csv
 
 
