@@ -82,7 +82,7 @@ class LoggerBase:
             path_target (str): experiment logs base output directory
         """
         rank, world_size, _, _ = pytorch_worker_info()
-        if world_size > 1:
+        if world_size and world_size > 1:
             self.use_ddp = int(environ.get("USE_DDP", "1"))
             if not self.use_ddp:
                 self.multi_gpu = True
@@ -92,12 +92,12 @@ class LoggerBase:
 
         log_filename = None
 
-        if path_target and rank == 0:
+        if path_target and not rank:
             makedirs(path_target, exist_ok=True)
-        if not self.use_ddp or rank == 0:
-            log_filename = f"{path_target}/log_{rank}.txt"
+        if not self.use_ddp or not rank:
+            log_filename = f"{path_target}/log_{rank or 0}.txt"
 
-        if not self.use_ddp or rank == 0:
+        if not self.use_ddp or not rank:
             self.logger_stdout, self.logger_file = self._init_loggers(
                 name, log_filename
             )
@@ -167,8 +167,8 @@ class LoggerBase:
             None:
 
         """
-        rank, world_size, _, _ = pytorch_worker_info()  # TODO: avoid redundant calls
-        if (self.use_ddp or main_rank_only) and rank != 0:
+        rank, _, _, _ = pytorch_worker_info()  # TODO: avoid redundant calls
+        if (self.use_ddp or main_rank_only) and rank:
             return
 
         if mtype == MessageType.DEBUG or mtype == MessageType.DEBUG.value:
@@ -270,7 +270,7 @@ class LoggerBase:
 
         """
         rank, _, _, _ = pytorch_worker_info()  # TODO: avoid redundant calls
-        if self.use_ddp and rank != 0:
+        if self.use_ddp and rank:
             return None
 
         if subdir is not None:
