@@ -4,3 +4,6 @@
 [submodule "audiolm-pytorch"]
 	path = external/audiolm-pytorch
 	url = https://github.com/lucidrains/audiolm-pytorch
+[submodule "external/AcademiCodec"]
+	path = external/AcademiCodec
+	url = https://github.com/yangdongchao/AcademiCodec
