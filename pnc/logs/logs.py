@@ -1,3 +1,4 @@
+import gc
 import shutil
 
 from contextlib import contextmanager
@@ -222,3 +223,10 @@ class LoggerUnited(LoggerBase, LoggerOnline):
     def add_audio(self, tag=None, audio=None):
         if self.use_online:
             self.online_logger.add_images(tag, audio)
+
+    def __del__(self):
+        try:
+            del self.online_logger
+        except AttributeError:
+            pass
+        gc.collect()
