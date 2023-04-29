@@ -220,22 +220,22 @@ def main():
 
             if k_iter % cfg.env.test_freq == 0:
                 #test
-                rescale = True # Automatically rescale the output to avoid clipping
-                x = valid_dataset[0]
-                x_wav = get_input(x)
-                #compressing
-                wav = x_wav.unsqueeze(1).to(device)
-                print('wav ', wav.shape)
-                compressed = soundstream.encode(wav)
-                # print('compressed ', compressed.shape)
-                print('finish compressing')
-                out = soundstream.decode(compressed)
-                out = out.detach().cpu().squeeze(0)
-                check_clipping2(out, rescale)
-                save_audio(x_wav, os.path.join(cfg.env.PATH, "in.wav"), 24000, rescale=rescale)
-                save_audio(out, os.path.join(cfg.env.PATH, 'out_{:010d}.wav'.format(global_step)), 24000, rescale=rescale)
-                print('finish decompressing')
-
+                with torch.no_grad():
+                    rescale = True # Automatically rescale the output to avoid clipping
+                    x = valid_dataset[0]
+                    x_wav = get_input(x)
+                    #compressing
+                    wav = x_wav.unsqueeze(1).to(device)
+                    print('wav ', wav.shape)
+                    compressed = soundstream.encode(wav)
+                    # print('compressed ', compressed.shape)
+                    print('finish compressing')
+                    out = soundstream.decode(compressed)
+                    out = out.detach().cpu().squeeze(0)
+                    check_clipping2(out, rescale)
+                    save_audio(x_wav, os.path.join(cfg.env.PATH, "in.wav"), 24000, rescale=rescale)
+                    save_audio(out, os.path.join(cfg.env.PATH, 'out_{:010d}.wav'.format(global_step)), 24000, rescale=rescale)
+                    print('finish decompressing')
 
         lr_scheduler_g.step()
         lr_scheduler_d.step()
