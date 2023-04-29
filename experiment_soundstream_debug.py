@@ -4,7 +4,7 @@ from datetime import datetime
 from os import path as osp
 
 from pnc.config import OmegaConf as OMG
-from pnc.logs import LoggerUltimate
+from pnc.OmniLog import LoggerUltimate
 from pnc.soundstream.soundstream import SoundStream
 from pnc.soundstream.trainer import SoundStreamTrainer
 from pnc.soundstream.debug_dataset import make_placeholder_dataset

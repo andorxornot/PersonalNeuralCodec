@@ -8,7 +8,7 @@ model:
 trainer:
   dataset_folder: /home/dev/other/data/LibriTTS
   batch_size: 4
-  grad_accum_every: 8
+  grad_accum_every: 16
   data_max_length: 10240 # 320*32
   save_results_every: 1000
   save_model_every: 1000

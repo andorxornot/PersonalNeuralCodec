@@ -1,5 +1,5 @@
 from .base import LoggerBase, MessageType
-from .logs import LoggerUnited
+from .OmniLog import LoggerUnited
 from .tensorboard import LoggerTensorboard
 
 LoggerUltimate = LoggerUnited
