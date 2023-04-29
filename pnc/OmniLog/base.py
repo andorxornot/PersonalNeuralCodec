@@ -321,6 +321,16 @@ class LoggerBase:
             return
         torch.save(content, out_file)
 
+    def __del__(self):
+        try:
+            self.logger_stdout.close()
+        except AttributeError:
+            pass
+        try:
+            self.logger_file.close()
+        except AttributeError:
+            pass
+
 
 def get_path_logs(config):
     """
