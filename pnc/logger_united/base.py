@@ -70,6 +70,7 @@ class LoggerOnline(metaclass=ABCMeta):
         ...
 
 
+
 class LoggerBase:
     """
     Base logger class.
@@ -108,16 +109,13 @@ class LoggerBase:
     def _init_loggers(self, name: str, log_filename: str, log_format: str = None):
         """
         Initializer for two loggers: log to stdout and log to file.
-
         Args:
             name (str): the logger name
             log_filename (str): logger file name (for file logger)
             log_format (str): format string for both loggers
-
         Returns:
             Logger: stdout logger
             Union[Logger, None]: file logger or None if no filename provided
-
         """
         logger_stdout = logging.getLogger(f"{name}_stdout")
         logger_stdout.setLevel(logging.DEBUG)
@@ -155,17 +153,14 @@ class LoggerBase:
     ):
         """
         Logs message to stdout/file.
-
         Args:
             message (str): message to log
             mtype (MessageType): message type (DEBUG, INFO, WARNING, ERROR, FATAL)
             main_rank_only (bool): log the process with rank 0 only
             to_stdout (bool): whether write to stdout (default: True)
             to_file (bool): whether write to file (default: True)
-
         Returns:
             None:
-
         """
         rank, _, _, _ = pytorch_worker_info()  # TODO: avoid redundant calls
         if (self.use_ddp or main_rank_only) and rank:
@@ -260,14 +255,11 @@ class LoggerBase:
     def _prepare_tree_for_saving(self, name: str, subdir: str = None):
         """
         Prepare full path for saving files.
-
         Args:
             name (str): file name
             subdir (str): subdirectory
-
         Returns:
             None:
-
         """
         rank, _, _, _ = pytorch_worker_info()  # TODO: avoid redundant calls
         if self.use_ddp and rank:
@@ -287,15 +279,12 @@ class LoggerBase:
     ):
         """
         Allow to save custom txt file.
-
         Args:
             content (str): message
             name (str): file name
             subdir (str): subdirectory
-
         Returns:
             None:
-
         """
         out_file = self._prepare_tree_for_saving(name, subdir)
         if out_file is None:
@@ -306,15 +295,12 @@ class LoggerBase:
     def save_custom_torch(self, content: str, name: str, subdir: str = None):
         """
         Allow to save custom torch file.
-
         Args:
             content (str): message
             name (str): file name
             subdir (str): subdirectory
-
         Returns:
             None:
-
         """
         out_file = self._prepare_tree_for_saving(name, subdir)
         if out_file is None:
@@ -330,6 +316,8 @@ class LoggerBase:
             self.logger_file.close()
         except AttributeError:
             pass
+
+
 
 
 def get_path_logs(config):
@@ -352,5 +340,5 @@ def get_path_logs(config):
     return path_logs
 
 
-__all__ = ['get_path_logs', 'LoggerBase', 'LoggerOnline', 'MessageType']
+__all__ = ['get_path_logs', 'LoggerOnline', 'LoggerBase','MessageType']
 

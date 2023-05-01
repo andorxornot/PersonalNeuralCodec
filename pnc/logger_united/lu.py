@@ -11,13 +11,12 @@ from .base import LoggerBase, LoggerOnline, MessageType
 from .config import print_cfg, save_cfg
 from .checkpoint import save_source_files
 from .checkpoint import get_checkpoint_folder
-from .tensorboard import tensorboard_logger_factory
+from .main_logger import logger_factory
 from ..utils import pytorch_worker_info
 
 
 online_loggers = {
-    'tensorboard': tensorboard_logger_factory
-}
+    'tensorboard': logger_factory}
 
 
 class LoggerUnited(LoggerBase, LoggerOnline):
@@ -34,7 +33,7 @@ class LoggerUnited(LoggerBase, LoggerOnline):
         """
         self.checkpoint_folder = get_checkpoint_folder(config)
         super().__init__(__name__, path_target=self.checkpoint_folder)
-
+        
         try:
             self.online_logger = online_loggers[online_logger](config)
             self.use_online = True
@@ -50,13 +49,6 @@ class LoggerUnited(LoggerBase, LoggerOnline):
         save_cfg(config, self)
         save_source_files(config, self)
 
-    def get_exp_root_dir(self):
-        return Path(self.checkpoint_folder)
-
-    def set_run(self, run_name=None):
-        if self.use_online:
-            self.online_logger.set_run(run_name)
-
     @contextmanager
     def toggle_run(self, run_name=None):
         if self.use_online:
@@ -64,6 +56,14 @@ class LoggerUnited(LoggerBase, LoggerOnline):
                 yield
         else:
             yield
+
+    def get_exp_root_dir(self):
+        return Path(self.checkpoint_folder)
+
+    def set_run(self, run_name=None):
+        if self.use_online:
+            self.online_logger.set_run(run_name)
+
 
     def on_update(
         self,
@@ -220,9 +220,9 @@ class LoggerUnited(LoggerBase, LoggerOnline):
         if self.use_online:
             self.online_logger.add_images(tag, image)
 
-    def add_audio(self, tag=None, audio=None):
+    def add_audio(self, tag=None, audio=None, phase_index=0, sample_rate=None):
         if self.use_online:
-            self.online_logger.add_images(tag, audio)
+            self.online_logger.add_audio(tag, audio, phase_index, sample_rate)
 
     def __del__(self):
         try:

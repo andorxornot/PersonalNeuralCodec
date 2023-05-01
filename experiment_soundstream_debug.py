@@ -4,7 +4,7 @@ from datetime import datetime
 from os import path as osp
 
 from pnc.config import OmegaConf as OMG
-from pnc.OmniLog import LoggerUltimate
+from pnc.logger_united import LoggerUnited
 from pnc.soundstream.soundstream import SoundStream
 from pnc.soundstream.trainer import SoundStreamTrainer
 from pnc.soundstream.debug_dataset import make_placeholder_dataset
@@ -47,7 +47,17 @@ parser.add_argument(
     "--device",
     dest='env.device',
     default=0,
+    type=int,
     help="select device (CPU | 0 | 1 | 2 | ...)"
+)
+
+
+parser.add_argument(
+    "-f",
+    "--files",
+    dest='trainer.dataset_folder',
+    default='',
+    help="files path"
 )
 
 # args = parser.parse_args()
@@ -57,6 +67,7 @@ run_folder = osp.join(cfg.experiment.path_output, cfg.experiment.name)
 
 if cfg.debug:
     cfg.trainer.num_train_steps = 10
+    cfg.trainer.save_results_every = 3
     # folder = cfg.trainer.dataset_folder
     folder = './debug_dataset/'
     cfg.trainer.dataset_folder = folder
@@ -67,9 +78,9 @@ soundstream = SoundStream(
     rq_num_quantizers=cfg.model.rq_num_quantizers,
 )
 
-print(cfg)
+soundstream.to(cfg.env.device)
 
-logger = LoggerUltimate(cfg, online_logger='tensorboard')
+logger = LoggerUnited(cfg, online_logger='tensorboard')
 
 trainer = SoundStreamTrainer(
     soundstream,
@@ -82,7 +93,8 @@ trainer = SoundStreamTrainer(
     num_train_steps=cfg.trainer.num_train_steps,
     valid_frac=cfg.trainer.valid_frac,
     run_folder=run_folder,
-    logger=logger
+    logger=logger,
+    device = cfg.env.device
     # accelerate_kwargs={'log_with': logger}
 ).to(cfg.env.device)
 

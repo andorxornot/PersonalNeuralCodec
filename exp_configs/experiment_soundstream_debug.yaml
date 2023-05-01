@@ -1,8 +1,8 @@
 # HP discussion https://github.com/lucidrains/audiolm-pytorch/discussions/107
 
-debug: true
+debug: false
 
-experiment:
+experiment: 
   name: ???
   path_output: "results"  # ./results relative to experiment working directory
   path_checkpoints: "checkpoints"  # relative to "<path_output>/<name>/"
@@ -18,13 +18,18 @@ experiment:
     - "experiments"
     - "pnc"
 
+logging:
+  TENSORBOARD:
+    FLUSH_EVERY_N_MIN: 2
+  use_wandb: true
+
 model:
   codebook_size: 1024
   rq_num_quantizers: 8
 
 trainer:
   dataset_folder: ???
-  batch_size: 4
+  batch_size: 16
   grad_accum_every: 8
   data_max_length: 10240
   save_results_every: 1000
@@ -33,5 +38,4 @@ trainer:
   valid_frac: 0.05
 
 env:
-  device: 0
-  run_folder: ???
+  device: 1

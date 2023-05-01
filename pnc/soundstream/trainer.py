@@ -26,7 +26,7 @@ from .data import SoundDataset, get_dataloader
 from accelerate import Accelerator, DistributedType
 from accelerate.utils import DistributedDataParallelKwargs
 
-from ..logs import LoggerUnited
+from ..logger_united import LoggerUnited
 
 # Constants
 
@@ -145,14 +145,16 @@ class SoundStreamTrainer(nn.Module):
             accelerator: Accelerator = None,
             accelerate_kwargs: dict = None,
             use_lion: bool = False,
-            force_clear_prev_results: bool = None  # set to True | False to skip the prompt
+            force_clear_prev_results: bool = None,  # set to True | False to skip the prompt
+            device: int = 0,
     ):
         """
         Initialize with a SoundStream instance and either a folder containing audio data or
         train/val DataLoader instances.
         """
         super().__init__()
-
+        
+        self._device = device
         run_folder = run_folder or '../results'
         accelerate_kwargs = accelerate_kwargs or {}
         if accelerator:
@@ -258,6 +260,7 @@ class SoundStreamTrainer(nn.Module):
             self.dl
         )
 
+        self.soundstream.to(self.device)
         # prepare the multiscale discriminators with accelerator
 
         for name, _ in self.multiscale_discriminator_iter():
@@ -374,7 +377,7 @@ class SoundStreamTrainer(nn.Module):
         return self.accelerator.is_local_main_process
 
     def train_step(self):
-        device = self.device
+        device = self._device
 
         steps = int(self.steps.item())
         apply_grad_penalty = self.apply_grad_penalty_every > 0 and not (steps % self.apply_grad_penalty_every)
@@ -391,7 +394,6 @@ class SoundStreamTrainer(nn.Module):
         for _ in range(self.grad_accum_every):
             wave, = next(self.dl_iter)
             wave = wave.to(device)
-
             loss, (recon_loss, multi_spectral_recon_loss, adversarial_loss, feature_loss,
                    all_commitment_loss) = self.soundstream(wave, return_loss_breakdown=True)
 
@@ -452,15 +454,6 @@ class SoundStreamTrainer(nn.Module):
 
         losses_str = f"{steps}: soundstream total loss: {logs['loss']:.3f}, soundstream recon loss: {logs['recon_loss']:.3f}"
         if log_losses:
-            # self.accelerator.log({
-            #     "total_loss": logs['loss'],
-            #     "recon_loss": logs['recon_loss'],
-            #     "multi_spectral_recon_loss": logs['multi_spectral_recon_loss'],
-            #     "adversarial_loss": logs['adversarial_loss'],
-            #     "feature_loss": logs['feature_loss'],
-            #     "all_commitment_loss": logs['all_commitment_loss'],
-            #     "stft_discr_loss": logs['stft']
-            # }, step=steps)
             self.logger.log({
                 "total_loss": logs['loss'],
                 "recon_loss": logs['recon_loss'],
@@ -504,18 +497,21 @@ class SoundStreamTrainer(nn.Module):
 
             wave, = next(self.valid_dl_iter)
             wave = wave.to(device)
-
+         
+            self.logger.add_audio(tag='Audio/orig',audio=wave[-1].cpu().detach(), phase_index=steps, sample_rate=self.unwrapped_soundstream.target_sample_hz)
             for model, label in models:
                 model.eval()
 
                 with torch.no_grad():
                     recons = model(wave, return_recons_only=True)
-
+                    self.print(f'writing audio shape:{recons.shape}')
                 for ind, recon in enumerate(recons.unbind(dim=0)):
-                    filename = str(self.run_folder / f'sample_{label}.flac')
+                    filename = str(self.run_folder / f'sample_{label}_{ind}.flac')
                     torchaudio.save(filename, recon.cpu().detach(), self.unwrapped_soundstream.target_sample_hz)
+                    self.logger.add_audio(tag=f'Audio/recon_{ind}',audio=recon.cpu().detach(), phase_index=steps, sample_rate=self.unwrapped_soundstream.target_sample_hz)
 
             self.print(f'{steps}: saving to {str(self.run_folder)}')
+
 
         # Save model every so often
 

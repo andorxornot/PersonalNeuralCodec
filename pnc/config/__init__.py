@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from omegaconf import DictConfig, ListConfig, OmegaConf as OmegaConfBase
 
-from ..logs import LoggerBase, MessageType
+from ..logger_united import LoggerBase, MessageType
 
 
 class OmegaConf(OmegaConfBase):

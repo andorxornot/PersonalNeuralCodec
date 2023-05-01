@@ -658,7 +658,6 @@ class SoundStream(nn.Module):
             x = rearrange(x, 'b n -> b 1 n')
 
         orig_x = x.clone()
-
         x = self.encoder(x)
 
         x = rearrange(x, 'b c n -> b n c')
