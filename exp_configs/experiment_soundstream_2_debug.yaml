@@ -1,0 +1,38 @@
+experiment:
+  name: ???
+  path_output: "results"  # ./results relative to experiment working directory
+  path_checkpoints: "checkpoints"  # relative to "<path_output>/<name>/"
+  path_checkpoint_sources: "source_files"  # relative to "<path_checkpoints>/"
+  path_logs: "logs"  # relative to "<path_output>/<name>/"
+  path_logs_tensorboard: "tensorboard"  # relative to <path_logs>
+  log_tensorboard_flush_frequency: 1  # every N minutes
+  log_tensorboard_params: true  # log params or not (true/false)
+  log_tensorboard_params_frequency: 100  # every N iterations
+  path_project_root: "."  # set to proper path if start from another directory
+  project_checkpoint_directories:  # none of this should not be in <path_output>
+    - "configs"
+    - "experiments"
+    - "pnc"
+
+env:
+  gpu: null # GPU id to use. If given, only the specific gpu will be used, and ddp will be disabled
+  seed: null # seed for initializing training. 
+  cudnn_deterministic: False # set cudnn.deterministic True
+  soundstream_ratios: [6, 5, 4, 2] # soundstream downsample rate 
+  LAMBDA_ADV: 1.0 # hyper-parameter for adver loss
+  LAMBDA_FEAT: 1.0 # hyper-parameter for feat loss
+  LAMBDA_REC: 1.0 # hyper-parameter for rec loss
+  LAMBDA_COM: 1000.0 # hyper-parameter for commit loss
+  N_EPOCHS: 100 # Total training epoch
+  st_epoch: 0 # start training epoch
+  global_step: 0 # record the global step
+  discriminator_iter_start: 500 # discriminator iteration start
+  BATCH_SIZE: 1 # batch size
+  PATH: 'log/' # model path
+  sr: 24000 # sample rate 
+  print_freq: 10 # the print number
+  test_freq: 10 # test on wav file
+  train_data_path: 'data/music_samples' # training data
+  valid_data_path: 'debug_dataset/subdirectory' # validation data
+  resume: False # whether re-train model
+  resume_path: '' # resume path
