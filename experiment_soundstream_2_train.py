@@ -25,7 +25,7 @@ from external.AcademiCodec.SoundStream_24k_240d.utils import seed_everything, Lo
 from external.AcademiCodec.SoundStream_24k_240d.loss import loss_g, loss_dis, criterion_g, criterion_d
 
 from pnc.config import OmegaConf as OMG
-from pnc.logs import LoggerUltimate
+from pnc.logger_united import LoggerUnited
 
 def get_input(x):
     x = x.to(memory_format=torch.contiguous_format)
@@ -80,10 +80,11 @@ def main():
     parser.add_argument("-c", "--config", default="./exp_configs/experiment_soundstream_2_debug.yaml", help="config path")
     parser.add_argument("-n", "--run-name", dest="experiment.name", default="{}".format(timestamp), help="experiment/run name (default: {})".format(timestamp))
     parser.add_argument("-o", "--run-output", dest="experiment.path_output", default="../results", help="experiment/run output directory root")
+    parser.add_argument("-d", "--device", dest='env.device', default=0, type=int, help="select device (CPU | 0 | 1 | 2 | ...)" )
     parser.add_argument("--debug", action="store_true", help="run in debug mode")
 
     cfg = OMG.from_cli(parser) 
-    logger = LoggerUltimate(cfg, online_logger='tensorboard')
+    logger = LoggerUnited(cfg, online_logger='tensorboard')
 
     # logs
     if cfg.env.resume:
@@ -106,7 +107,7 @@ def main():
     getModelSize(mpd)
     getModelSize(stft_disc)
     
-    device = torch.device('cuda')
+    device = torch.device(cfg.env.device)
     args = omegaconf_to_namespace(cfg.env)
     args.device = device
 
@@ -180,9 +181,13 @@ def main():
                     train_adv_g_loss += adv_g_loss.item()
                     train_feat_loss += feat_loss.item()
                     train_rec_loss += rec_loss.item()
-                    optimizer_g.zero_grad()
+
                     total_loss_g.backward()
-                    optimizer_g.step()
+                    if global_step > 0 and (global_step + 1) % cfg.env.grad_accum_every == 0:
+                        # torch.nn.utils.clip_grad_norm_(soundstream.parameters(), 1.0)
+
+                        optimizer_g.step()
+                        optimizer_g.zero_grad()
                 else:
                     # update discriminator
                     y_disc_r_det, fmap_r_det = stft_disc(x.detach())
@@ -197,9 +202,13 @@ def main():
                                       y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g, 
                                       y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g, global_step, args)
                     train_loss_d += loss_d.item()
-                    optimizer_d.zero_grad()
+
                     loss_d.backward()
-                    optimizer_d.step()
+                    if global_step > 0 and (global_step + 1) % cfg.env.grad_accum_every == 0:
+                        #torch.nn.utils.clip_grad_norm_(list(stft_disc.parameters()) + list(msd.parameters()) + list(mpd.parameters()), 1.0)
+       
+                        optimizer_d.step()
+                        optimizer_d.zero_grad()
 
             logger.log({
                 'epoch': epoch,
@@ -218,7 +227,7 @@ def main():
                     k_iter, total_loss_g.item(), adv_g_loss.item(), feat_loss.item(), rec_loss.item(), commit_loss.item(), loss_d.item(), d_weight.item())
                 print(message)                
 
-            if k_iter % cfg.env.test_freq == 0:
+            if global_step % cfg.env.save_results_steps == 0:
                 #test
                 with torch.no_grad():
                     rescale = True # Automatically rescale the output to avoid clipping
@@ -233,8 +242,12 @@ def main():
                     out = soundstream.decode(compressed)
                     out = out.detach().cpu().squeeze(0)
                     check_clipping2(out, rescale)
-                    save_audio(x_wav, os.path.join(cfg.env.PATH, "in.wav"), 24000, rescale=rescale)
-                    save_audio(out, os.path.join(cfg.env.PATH, 'out_{:010d}.wav'.format(global_step)), 24000, rescale=rescale)
+                    save_audio(x_wav, os.path.join(cfg.env.PATH, "in.wav"), cfg.env.sr, rescale=rescale)
+                    save_audio(out, os.path.join(cfg.env.PATH, 'out_{:010d}.wav'.format(global_step)), cfg.env.sr, rescale=rescale)
+
+                    logger.add_audio(tag='Audio/orig',audio=x_wav, phase_index=global_step, sample_rate=cfg.env.sr)
+                    logger.add_audio(tag='Audio/recon',audio=out, phase_index=global_step, sample_rate=cfg.env.sr)
+
                     print('finish decompressing')
 
         lr_scheduler_g.step()
@@ -305,7 +318,9 @@ def main():
             if valid_rec_loss < best_val_loss:
                 best_val_loss = valid_rec_loss
                 best_val_epoch = epoch
-            torch.save(best_model, cfg.env.PATH + '/best_'+str(epoch)+'.pth')
+            
+            if epoch % cfg.env.save_model_epoch == 0:
+                torch.save(best_model, cfg.env.PATH + '/best_'+str(epoch)+'.pth')
 
             latest_save = {}
             latest_save['soundstream'] = latest_model_soundstream

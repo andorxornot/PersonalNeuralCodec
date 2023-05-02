@@ -14,8 +14,13 @@ experiment:
     - "experiments"
     - "pnc"
 
+logging:
+  TENSORBOARD:
+    FLUSH_EVERY_N_MIN: 2
+  use_wandb: true
+
 env:
-  gpu: null # GPU id to use. If given, only the specific gpu will be used, and ddp will be disabled
+  device: 0 # GPU id to use. If given, only the specific gpu will be used, and ddp will be disabled
   seed: null # seed for initializing training. 
   cudnn_deterministic: False # set cudnn.deterministic True
   soundstream_ratios: [6, 5, 4, 2] # soundstream downsample rate 
@@ -23,7 +28,7 @@ env:
   LAMBDA_FEAT: 1.0 # hyper-parameter for feat loss
   LAMBDA_REC: 1.0 # hyper-parameter for rec loss
   LAMBDA_COM: 1000.0 # hyper-parameter for commit loss
-  N_EPOCHS: 100 # Total training epoch
+  N_EPOCHS: 100000 # Total training epoch
   st_epoch: 0 # start training epoch
   global_step: 0 # record the global step
   discriminator_iter_start: 500 # discriminator iteration start
@@ -31,8 +36,10 @@ env:
   PATH: 'log/' # model path
   sr: 24000 # sample rate 
   print_freq: 10 # the print number
-  test_freq: 10 # test on wav file
+  save_results_steps: 5000 # save audio to wav file 
+  save_model_epoch: 100 # epoch
   train_data_path: 'data/music_samples' # training data
   valid_data_path: 'debug_dataset/subdirectory' # validation data
   resume: False # whether re-train model
   resume_path: '' # resume path
+  grad_accum_every: 8
