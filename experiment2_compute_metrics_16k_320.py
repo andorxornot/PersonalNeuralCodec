@@ -73,9 +73,8 @@ def get_parser():
         help='Output file, otherwise inferred from input file.')
     
     parser.add_argument('--resume_path', type=str, default='/home/k4/Projects/PWC/AcademiCodec/encodec_16k_320d.pth',  help='resume_path')
-    parser.add_argument('--n_filters', type=int, default=32)
     parser.add_argument('--samplerate', type=int, default=16000)
-    parser.add_argument('--target_bw', type=int, default=12)
+    parser.add_argument('--target_bw', type=float, default=12)
     parser.add_argument('--ratios', type=int, nargs='+', default=[8, 5, 4, 2], help='List of ratios')
 	
     parser.add_argument(
@@ -203,7 +202,7 @@ def test_batch():
 
     input_lists = sorted(glob.glob(str(args.input) +'/**/*.wav', recursive=True))
 
-    soundstream = SoundStream(n_filters=args.n_filters, D=512, ratios=args.ratios)
+    soundstream = SoundStream(n_filters=32, D=512, ratios=args.ratios)
     parameter_dict = torch.load(args.resume_path)
     new_state_dict = OrderedDict()
     for k, v in parameter_dict.items(): # k is module.xxx.weight, v is weight
