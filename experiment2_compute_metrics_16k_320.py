@@ -33,7 +33,7 @@ def search_wav_files(directory):
 
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith(".wav"):# or file.endswith(".flac") or  file.endswith(".mp3"):
+            if file.endswith(".wav") or file.endswith(".flac") or  file.endswith(".mp3"):
                 wav_files.append(os.path.join(root, file))
 
     return wav_files
@@ -162,6 +162,7 @@ def cal_pesq(ref_dir, deg_dir):
     wb_pesq_scores = 0.0
     for deg_wav in tqdm(input_files):
         ref_wav = os.path.join(ref_dir, os.path.relpath(deg_wav, deg_dir) )
+        ref_wav = os.path.splitext(ref_wav)[0]
         ref_rate, ref = wavfile.read(ref_wav)
         deg_rate, deg = wavfile.read(deg_wav)
         if ref_rate != samplerate:
@@ -187,6 +188,7 @@ def calculate_stoi(ref_dir, deg_dir):
     stoi_scores = []
     for deg_wav in tqdm(input_files):
         ref_wav = os.path.join(ref_dir, os.path.relpath(deg_wav, deg_dir) )
+        ref_wav = os.path.splitext(ref_wav)[0]
         rate, ref = wavfile.read(ref_wav)
         rate, deg = wavfile.read(deg_wav)
         min_len = min(len(ref), len(deg))
@@ -219,7 +221,7 @@ def test_batch():
 
     cnt = 0
     for audio in input_lists:
-        test_one(os.path.join(args.input,audio), os.path.join(args.output,os.path.relpath(audio, str(args.input)) ), args.rescale, args, soundstream)
+        test_one(os.path.join(args.input,audio), os.path.join(args.output,os.path.relpath(audio, str(args.input)) )+".wav", args.rescale, args, soundstream)
         cnt += 1
         if cnt > 100:
             break
