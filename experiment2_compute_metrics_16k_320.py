@@ -6,33 +6,37 @@
 
 """Command-line for audio compression."""
 import argparse
-from pathlib import Path
 import sys
-import torchaudio
 import os
-import torch
 import typing as tp
 from collections import OrderedDict
 import librosa
 import glob
 import soundfile as sf
-import librosa
-import os
-import glob
-import argparse
 from tqdm import tqdm
 from pesq import pesq
 from scipy.io import wavfile
 import scipy.signal as signal
 from pystoi import stoi
 import numpy as np
-
+import torchaudio
+from pathlib import Path
+import torch
 
 # Add paths to import from external submodules and internal modules
 sys.path.append(os.path.join(os.path.dirname(__file__), 'external', 'AcademiCodec', 'Encodec_16k_320'))
 
 from external.AcademiCodec.Encodec_16k_320.net3 import SoundStream
 
+def search_wav_files(directory):
+    wav_files = []
+
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".wav"):# or file.endswith(".flac") or  file.endswith(".mp3"):
+                wav_files.append(os.path.join(root, file))
+
+    return wav_files
 
 
 SUFFIX = '.ecdc'
@@ -151,8 +155,9 @@ def test_one(wav_input, wav_output, rescale, args, soundstream):
     #assert 1==2
  
 
-def cal_pesq(ref_dir, deg_dir, samplerate):
-    input_files = glob.glob(f"{deg_dir}/**/*.wav", recursive=True)
+def cal_pesq(ref_dir, deg_dir):
+    samplerate = 16000
+    input_files = search_wav_files(deg_dir)
     nb_pesq_scores = 0.0
     wb_pesq_scores = 0.0
     for deg_wav in tqdm(input_files):
@@ -175,7 +180,7 @@ def cal_pesq(ref_dir, deg_dir, samplerate):
 
 
 def calculate_stoi(ref_dir, deg_dir):
-    input_files = glob.glob(f"{deg_dir}/**/*.wav", recursive=True)
+    input_files = search_wav_files(deg_dir)
     if len(input_files) < 1:
         raise RuntimeError(f"Found no wavs in {ref_dir}")
 
@@ -200,7 +205,7 @@ def test_batch():
         fatal(f"Input file {args.input} does not exist.")
 
 
-    input_lists = sorted(glob.glob(str(args.input) +'/**/*.wav', recursive=True))
+    input_lists =search_wav_files(args.input) 
 
     soundstream = SoundStream(n_filters=32, D=512, ratios=args.ratios)
     parameter_dict = torch.load(args.resume_path)
@@ -211,10 +216,16 @@ def test_batch():
     soundstream.load_state_dict(new_state_dict) # load model
     soundstream = soundstream.cuda()
     os.makedirs(args.output, exist_ok=True)
+
+    cnt = 0
     for audio in input_lists:
         test_one(os.path.join(args.input,audio), os.path.join(args.output,os.path.relpath(audio, str(args.input)) ), args.rescale, args, soundstream)
- 
-    nb_score, wb_score = cal_pesq(args.input, args.output, args.samplerate)
+        cnt += 1
+        if cnt > 100:
+            break
+
+
+    nb_score, wb_score = cal_pesq(args.input, args.output)
     print(f"NB PESQ: {nb_score}")
     print(f"WB PESQ: {wb_score}")
 
