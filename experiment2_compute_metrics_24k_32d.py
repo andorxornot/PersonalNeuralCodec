@@ -163,12 +163,12 @@ def cal_pesq(ref_dir, deg_dir):
     for deg_wav in tqdm(input_files):
         ref_wav = os.path.join(ref_dir, os.path.relpath(deg_wav, deg_dir) )
         ref_wav = os.path.splitext(ref_wav)[0]
-        ref_rate, ref = wavfile.read(ref_wav)
-        deg_rate, deg = wavfile.read(deg_wav)
+        ref, ref_rate = sf.read(ref_wav)
+        deg, deg_rate = sf.read(deg_wav)
         if ref_rate != samplerate:
-            ref = signal.resample(ref, samplerate)
+            ref = librosa.resample(ref, orig_sr= ref_rate, target_sr= samplerate)
         if deg_rate != samplerate:
-            deg = signal.resample(deg, samplerate)
+            deg = librosa.resample(deg, orig_sr= deg_rate, target_sr= samplerate)
 
         min_len = min(len(ref), len(deg))
         ref = ref[:min_len]
@@ -181,6 +181,7 @@ def cal_pesq(ref_dir, deg_dir):
 
 
 def calculate_stoi(ref_dir, deg_dir):
+    samplerate = 16000
     input_files = search_wav_files(deg_dir)
     if len(input_files) < 1:
         raise RuntimeError(f"Found no wavs in {ref_dir}")
@@ -189,12 +190,17 @@ def calculate_stoi(ref_dir, deg_dir):
     for deg_wav in tqdm(input_files):
         ref_wav = os.path.join(ref_dir, os.path.relpath(deg_wav, deg_dir) )
         ref_wav = os.path.splitext(ref_wav)[0]
-        rate, ref = wavfile.read(ref_wav)
-        rate, deg = wavfile.read(deg_wav)
+        ref, ref_rate = sf.read(ref_wav)
+        deg, deg_rate = sf.read(deg_wav)
+        if ref_rate != samplerate:
+            ref = librosa.resample(ref, orig_sr= ref_rate, target_sr= samplerate)
+        if deg_rate != samplerate:
+            deg = librosa.resample(deg, orig_sr= deg_rate, target_sr= samplerate)
+
         min_len = min(len(ref), len(deg))
         ref = ref[:min_len]
         deg = deg[:min_len]
-        cur_stoi = stoi(ref, deg, rate, extended=False)
+        cur_stoi = stoi(ref, deg, samplerate, extended=False)
         stoi_scores.append(cur_stoi)
 
     return np.mean(stoi_scores)
@@ -223,7 +229,7 @@ def test_batch():
     for audio in input_lists:
         test_one(os.path.join(args.input,audio), os.path.join(args.output,os.path.relpath(audio, str(args.input)) ) +".wav", args.rescale, args, soundstream)
         cnt += 1
-        if cnt > 100:
+        if cnt > 4000:
             break
 
 
