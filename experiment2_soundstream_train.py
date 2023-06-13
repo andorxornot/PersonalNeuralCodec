@@ -20,7 +20,7 @@ import itertools
 from external.AcademiCodec.SoundStream_24k_240d.models import MultiPeriodDiscriminator, MultiScaleDiscriminator
 from external.AcademiCodec.SoundStream_24k_240d.msstftd import MultiScaleSTFTDiscriminator
 from external.AcademiCodec.SoundStream_24k_240d.net3 import SoundStream
-from external.AcademiCodec.SoundStream_24k_240d.dataset import NSynthDataset
+from external.datasets_academic import NSynthDataset
 from external.AcademiCodec.SoundStream_24k_240d.utils import seed_everything, Logger
 from external.AcademiCodec.SoundStream_24k_240d.loss import loss_g, loss_dis, criterion_g, criterion_d
 

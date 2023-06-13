@@ -215,7 +215,7 @@ def test_batch():
         fatal(f"Input file {args.input} does not exist.")
 
 
-    input_lists =search_wav_files(args.input) 
+    input_lists = search_wav_files(args.input) 
 
     soundstream = SoundStream(n_filters=32, D=512, ratios=args.ratios)
     parameter_dict = torch.load(args.resume_path)
