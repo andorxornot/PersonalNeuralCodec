@@ -9,3 +9,5 @@ beartype
 fairseq
 accelerate
 omegaconf
+pystoi
+pesq

@@ -18,21 +18,9 @@ from loss import loss_g, loss_dis, criterion_g, criterion_d
 from msstftd import MultiScaleSTFTDiscriminator
 from utils import load_model, seed_everything
 
-from pnc.config import OmegaConf as OMG
+from pnc.config.omega_wrap import OmegaConf as OMG
 from pnc.logger_united import LoggerUnited
 
-
-def check_clipping2(wav, rescale):
-    if rescale:
-        return
-    mx = wav.abs().max()
-    limit = 0.99
-    if mx > limit:
-        print(
-            f"Clipping!! max scale {mx}, limit is {limit}. "
-            "To avoid clipping, use the `-r` option to rescale the output.",
-            file=sys.stderr,
-        )
 
 
 def getModelSize(model):
@@ -309,7 +297,6 @@ def train(
                     print("finish compressing")
                     out = soundstream.decode(compressed)
                     out = out.detach().cpu().squeeze(0)
-                    check_clipping2(out, rescale)
                     save_audio(
                         x_wav,
                         os.path.join(cfg.env.PATH, "in.wav"),
