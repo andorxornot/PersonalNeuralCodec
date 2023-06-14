@@ -19,8 +19,8 @@ def reset_weights(model_child):
         @torch.no_grad()
         def apply(m):
             for name, child in m.named_children():
-                if isinstance(child, CountReLU):
-                    child.stats = None
+                # if isinstance(child, CountReLU):
+                #     child.stats = None
                 if hasattr(child, "_parameters"):
                     for param_name in child._parameters:
                         # print(name, param_name)

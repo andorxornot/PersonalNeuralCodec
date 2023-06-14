@@ -15,6 +15,8 @@ import torchaudio
 from torch import nn
 from torch.utils.data import DataLoader, random_split
 
+
+
 from .optimizer import get_optimizer
 
 from ema_pytorch import EMA
@@ -22,7 +24,7 @@ from ema_pytorch import EMA
 from .soundstream import SoundStream
 from .data import SoundDataset, get_dataloader
 
-from accelerate import Accelerator, DistributedType
+from accelerate import Accelerator
 from accelerate.utils import DistributedDataParallelKwargs
 
 from ..logger_united import LoggerUnited
@@ -356,10 +358,6 @@ class SoundStreamTrainer(nn.Module):
     @property
     def device(self):
         return self.accelerator.device
-
-    @property
-    def is_distributed(self):
-        return not (self.accelerator.distributed_type == DistributedType.NO and self.accelerator.num_processes == 1)
 
     @property
     def is_main(self):
