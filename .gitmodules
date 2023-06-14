@@ -1,9 +1,0 @@
-[submodule "encodec"]
-	path = external/encodec
-	url = https://github.com/facebookresearch/encodec
-[submodule "audiolm-pytorch"]
-	path = external/audiolm-pytorch
-	url = https://github.com/lucidrains/audiolm-pytorch
-[submodule "AcademiCodec"]
-	path = external/AcademiCodec
-	url = https://github.com/yangdongchao/AcademiCodec

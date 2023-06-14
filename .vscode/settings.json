@@ -1,8 +1,0 @@
-{
-  "python.analysis.extraPaths": [
-    "./external/audiolm-pytorch/audiolm_pytorch",
-    "./external/encodec/encodec"
-  ],
-  "python.formatting.provider": "black",
-  "python.formatting.blackPath":"/opt/conda/bin/black"
-}
