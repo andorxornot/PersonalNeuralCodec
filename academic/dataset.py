@@ -18,8 +18,12 @@ class NSynthDataset(Dataset):
     def __init__(self, audio_dir):
         super().__init__()
         self.filenames = []
-        self.filenames.extend(glob.glob(audio_dir + "/*.wav"))
-        print(len(self.filenames))
+        # files = [file for ext in exts for file in path.glob(f'**/*.{ext}')]
+
+        self.filenames.extend(
+            glob.glob(audio_dir + "/**/*.wav", recursive=True)
+        )
+        print("Set size:", len(self.filenames))
         # assert 1==2
         _, self.sr = torchaudio.load(self.filenames[0])
         # print(self.sr)
