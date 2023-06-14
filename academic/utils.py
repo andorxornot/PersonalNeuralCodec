@@ -32,9 +32,7 @@ def reset_weights(model_child):
                         if len(child._parameters[param_name].shape) < 2:
                             torch.nn.init.normal_(child._parameters[param_name].data)
                         else:
-                            torch.nn.init.xavier_uniform_(
-                                child._parameters[param_name].data
-                            )
+                            torch.nn.init.xavier_uniform_(child._parameters[param_name].data)
             reset_parameters = getattr(child, "reset_parameters", None)
             if callable(reset_parameters):
                 child.reset_parameters()

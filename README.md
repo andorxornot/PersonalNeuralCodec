@@ -1,5 +1,7 @@
 notes:
 
+python academic/train.py -c exp_configs/experiment_soundstream_2_debug.yaml  
+
 1. scripts to get LibriTTS are in data/get_data_scripts
 2. to run an experiment run python run_test.py -c ./exp_configs/sound_reprod_lucid.yaml -n test.
    - c -config path
@@ -29,3 +31,4 @@ The following table summarizes the experiments conducted in this project:
 | Experiment 1    | VQ-VAE model trained on mel spectrograms for audio encoding/decoding |
 | Experiment 2    | TBD                                                                  |
 | Experiment 3    | TBD                                                                  |
+
